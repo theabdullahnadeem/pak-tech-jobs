@@ -89,7 +89,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://linkedin.com"
+                  href="https://www.linkedin.com/in/abdullah-nadeem-ceo-digivixo/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-gray-400 hover:text-primary transition-colors"
@@ -99,7 +99,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/ab9898998989898"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-gray-400 hover:text-primary transition-colors"
