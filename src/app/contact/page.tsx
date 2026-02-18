@@ -25,7 +25,7 @@ export default function ContactPage() {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           ...data,
-          _subject: `New Contact from PakTechSalary: ${data.subject || "General"}`,
+          _subject: `New Contact from PakTechJobs: ${data.subject || "General"}`,
         }),
       });
 

@@ -5,7 +5,7 @@ import { resources } from "@/data/resources";
 import { courses } from "@/data/courses";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://paktechsalary.com";
+  const baseUrl = "https://paktechjobs.com";
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [

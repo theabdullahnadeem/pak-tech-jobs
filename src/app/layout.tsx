@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Software Engineer Salary in Pakistan 2026 — Tech Salaries, Career Tools & Free Calculators | PakTechSalary",
-    template: "%s | PakTechSalary",
+    default: "Software Engineer Salary in Pakistan 2026 — Tech Salaries, Career Tools & Free Calculators | PakTechJobs",
+    template: "%s | PakTechJobs",
   },
   description:
     "Discover software engineer salary in Pakistan, cyber security salary, MERN developer salary Lahore, Karachi & Islamabad. Free salary after tax calculator, freelance rate calculator, developer salary comparison tool & AI resume checker for Pakistan's tech industry.",
@@ -52,14 +52,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "PakTechSalary",
-    title: "Software Engineer Salary in Pakistan 2026 — PakTechSalary",
+    siteName: "PakTechJobs",
+    title: "Software Engineer Salary in Pakistan 2026 — PakTechJobs",
     description:
       "Complete salary guides for software engineers, MERN developers, cyber security experts, AI engineers & more across Lahore, Karachi & Islamabad. Free career tools included.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Software Engineer Salary in Pakistan 2026 — PakTechSalary",
+    title: "Software Engineer Salary in Pakistan 2026 — PakTechJobs",
     description:
       "Software engineer salary Pakistan, cyber security salary, developer salaries Lahore, Karachi & Islamabad. Free calculators & AI resume checker.",
   },

@@ -22,7 +22,7 @@ export default function JobsPage() {
         body: JSON.stringify({
           email,
           _subject: "🚀 New Job Portal Notification Signup",
-          message: `${email} wants to be notified when the PakTechSalary Job Portal launches.`,
+          message: `${email} wants to be notified when the PakTechJobs Job Portal launches.`,
         }),
       });
 

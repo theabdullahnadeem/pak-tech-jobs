@@ -26,7 +26,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <span className="text-2xl">🚀</span>
-              <span className="font-bold text-lg text-white">PakTechSalary</span>
+              <span className="font-bold text-lg text-white">PakTechJobs</span>
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed">
               Your go-to resource for tech salaries, career tools, and professional growth in Pakistan.
@@ -122,7 +122,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            © {new Date().getFullYear()} PakTechSalary. All rights reserved.
+            © {new Date().getFullYear()} PakTechJobs. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link

@@ -23,7 +23,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2 group">
             <span className="text-2xl">🚀</span>
             <span className="font-bold text-lg gradient-text group-hover:opacity-80 transition-opacity">
-              PakTechSalary
+              PakTechJobs
             </span>
           </Link>
 

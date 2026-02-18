@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
-  description: "Terms and Conditions for using PakTechSalary — your guide to our policies and usage terms.",
+  description: "Terms and Conditions for using PakTechJobs — your guide to our policies and usage terms.",
 };
 
 export default function TermsPage() {
@@ -14,15 +14,13 @@ export default function TermsPage() {
       <div className="prose-custom space-y-8">
         <section>
           <h2 className="text-xl font-bold mb-3">1. Acceptance of Terms</h2>
-          <p className="text-muted leading-relaxed">
-            By accessing and using PakTechSalary (&quot;the Site&quot;), you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, please do not use our website.
-          </p>
+            By accessing and using PakTechJobs (&quot;the Site&quot;), you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, please do not use our website.
         </section>
 
         <section>
           <h2 className="text-xl font-bold mb-3">2. Description of Services</h2>
           <p className="text-muted leading-relaxed mb-3">
-            PakTechSalary provides the following free services to users in Pakistan and beyond:
+            PakTechJobs provides the following free services to users in Pakistan and beyond:
           </p>
           <ul className="list-disc ml-5 space-y-1.5 text-muted">
             <li><strong>Salary Guides</strong> — estimated salary ranges for technology roles in Pakistan</li>
@@ -77,7 +75,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-xl font-bold mb-3">6. Intellectual Property</h2>
           <p className="text-muted leading-relaxed">
-            All content on PakTechSalary — including text, graphics, logos, tool functionality, and page layouts — is the intellectual property of PakTechSalary unless otherwise stated. You may not copy, modify, distribute, or republish any content without our explicit permission.
+            All content on PakTechJobs — including text, graphics, logos, tool functionality, and page layouts — is the intellectual property of PakTechJobs unless otherwise stated. You may not copy, modify, distribute, or republish any content without our explicit permission.
           </p>
         </section>
 
@@ -98,7 +96,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-xl font-bold mb-3">9. Limitation of Liability</h2>
           <p className="text-muted leading-relaxed">
-            PakTechSalary shall not be held liable for any direct, indirect, incidental, or consequential damages arising from your use of the Site, reliance on salary data, tax calculations, AI analysis results, or any actions taken based on information provided on this Site.
+            PakTechJobs shall not be held liable for any direct, indirect, incidental, or consequential damages arising from your use of the Site, reliance on salary data, tax calculations, AI analysis results, or any actions taken based on information provided on this Site.
           </p>
         </section>
 
@@ -123,7 +121,7 @@ export default function TermsPage() {
           </p>
           <ul className="list-disc ml-5 space-y-1.5 text-muted mt-2">
             <li>Email: <a href="mailto:paktechhjobs@gmail.com" className="text-primary hover:underline">paktechhjobs@gmail.com</a></li>
-            <li>Website: <a href="/" className="text-primary hover:underline">paktechsalary.com</a></li>
+            <li>Website: <a href="/" className="text-primary hover:underline">paktechjobs.com</a></li>
           </ul>
         </section>
       </div>

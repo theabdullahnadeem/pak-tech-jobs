@@ -3,14 +3,14 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "Learn about PakTechSalary — Pakistan's leading resource for tech salary data, career tools, and professional development.",
+  description: "Learn about PakTechJobs — Pakistan's leading resource for tech salary data, career tools, and professional development.",
 };
 
 export default function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
       <h1 className="text-3xl sm:text-4xl font-bold mb-3">
-        About <span className="gradient-text">PakTechSalary</span>
+        About <span className="gradient-text">PakTechJobs</span>
       </h1>
       <p className="text-lg text-muted mb-10 max-w-2xl">
         Pakistan&apos;s most comprehensive resource for tech salary data, free career tools, and professional development.
@@ -23,7 +23,7 @@ export default function AboutPage() {
             <span>🎯</span> Our Mission
           </h2>
           <p className="text-muted leading-relaxed">
-            We believe every tech professional in Pakistan deserves access to transparent salary information and powerful career tools — completely free. PakTechSalary was created to bridge the information gap in Pakistan&apos;s rapidly growing tech industry, helping developers, engineers, designers, and other tech professionals make informed career decisions.
+            We believe every tech professional in Pakistan deserves access to transparent salary information and powerful career tools — completely free. PakTechJobs was created to bridge the information gap in Pakistan&apos;s rapidly growing tech industry, helping developers, engineers, designers, and other tech professionals make informed career decisions.
           </p>
         </section>
 
@@ -86,7 +86,7 @@ export default function AboutPage() {
             <span>⚡</span> Built With Modern Tech
           </h2>
           <p className="text-muted leading-relaxed mb-3">
-            PakTechSalary is built with performance, accessibility, and user experience in mind:
+            PakTechJobs is built with performance, accessibility, and user experience in mind:
           </p>
           <div className="flex flex-wrap gap-2">
             {["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "Google Gemini AI", "Vercel"].map((tech) => (

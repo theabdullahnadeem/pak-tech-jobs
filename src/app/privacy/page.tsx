@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Privacy Policy for PakTechSalary — Learn how we collect, use, and protect your data.",
+  description: "Privacy Policy for PakTechJobs — Learn how we collect, use, and protect your data.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-xl font-bold mb-3">1. Introduction</h2>
           <p className="text-muted leading-relaxed">
-            Welcome to PakTechSalary (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website paktechsalary.com (the &quot;Site&quot;).
+            Welcome to PakTechJobs (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website paktechjobs.com (the &quot;Site&quot;).
           </p>
         </section>
 
@@ -123,7 +123,7 @@ export default function PrivacyPolicyPage() {
           </p>
           <ul className="list-disc ml-5 space-y-1.5 text-muted mt-2">
             <li>Email: <a href="mailto:paktechhjobs@gmail.com" className="text-primary hover:underline">paktechhjobs@gmail.com</a></li>
-            <li>Website: <a href="/" className="text-primary hover:underline">paktechsalary.com</a></li>
+            <li>Website: <a href="/" className="text-primary hover:underline">paktechjobs.com</a></li>
           </ul>
         </section>
       </div>
