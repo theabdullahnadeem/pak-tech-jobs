@@ -1,110 +1,91 @@
-"use client";
+import JobCard from "@/components/JobCard";
+import JobSearchBar from "@/components/JobSearchBar";
+import AdSlot from "@/components/AdSlot";
+import NewsletterSignup from "@/components/NewsletterSignup";
+import ResumeReviewCTA from "@/components/ResumeReviewCTA";
+import { jobsData } from "@/data/jobs";
+import type { Metadata } from "next";
 
-import { useState } from "react";
+export const metadata: Metadata = {
+  title: "All Tech Jobs in Pakistan | PakTechJobs",
+  description: "Browse hundreds of software engineering, AI, and IT jobs in Pakistan updated daily. Remote, Lahore, Karachi, and Islamabad openings.",
+};
 
-export default function JobsPage() {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !email.includes("@")) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await fetch("https://formsubmit.co/ajax/paktechhjobs@gmail.com", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          email,
-          _subject: "🚀 New Job Portal Notification Signup",
-          message: `${email} wants to be notified when the PakTechJobs Job Portal launches.`,
-        }),
-      });
-
-      if (res.ok) {
-        setSubmitted(true);
-        setEmail("");
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function AllJobsPage() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="text-center max-w-lg">
-        {/* Icon */}
-        <div className="text-7xl mb-6 animate-fade-in-up">🚧</div>
-
-        <h1 className="text-3xl sm:text-4xl font-bold mb-4 animate-fade-in-up delay-100">
-          Job Portal <span className="gradient-text">Coming Soon</span>
-        </h1>
-
-        <p className="text-muted text-lg mb-8 leading-relaxed animate-fade-in-up delay-200">
-          We&apos;re building Pakistan&apos;s dedicated tech job portal. Get notified when we launch with the latest tech job listings, internships, and remote opportunities.
-        </p>
-
-        {!submitted ? (
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto animate-fade-in-up delay-300"
-          >
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-              className="flex-1 px-4 py-3 rounded-xl border border-border dark:border-border-dark bg-card dark:bg-card-dark text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-primary/25 hover:shadow-primary/40 whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? "Sending..." : "Notify Me"}
-            </button>
-          </form>
-        ) : (
-          <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 animate-fade-in-up max-w-md mx-auto">
-            <span className="text-3xl block mb-2">✅</span>
-            <p className="font-semibold text-emerald-500 mb-1">You&apos;re on the list!</p>
-            <p className="text-sm text-muted">
-              We&apos;ll notify you as soon as the job portal launches.
+    <div className="min-h-screen bg-background pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Page Hero */}
+        <div className="bg-gradient-to-r from-emerald-950 to-cyan-950 rounded-3xl p-8 md:p-16 mb-12 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-[0.03]" />
+          <div className="relative z-10 text-center max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+              Tech Jobs in Pakistan
+            </h1>
+            <p className="text-lg md:text-xl text-gray-300 mb-10">
+              Find your next role as a software engineer, product designer, or data scientist. Discover remote and local opportunities across Pakistan.
             </p>
+            <JobSearchBar />
           </div>
-        )}
-
-        {error && (
-          <p className="text-red-500 text-sm mt-3">{error}</p>
-        )}
-
-        {/* Features preview */}
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in-up delay-400">
-          {[
-            { icon: "💼", label: "Tech Jobs" },
-            { icon: "🏠", label: "Remote Listings" },
-            { icon: "🎓", label: "Internships" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="p-4 rounded-xl border border-border dark:border-border-dark bg-card dark:bg-card-dark"
-            >
-              <span className="text-2xl block mb-2">{item.icon}</span>
-              <span className="text-sm font-medium">{item.label}</span>
-            </div>
-          ))}
         </div>
+
+        {/* AdSlot - Post Intro */}
+        <div className="mb-12">
+          <AdSlot position="post-intro" />
+        </div>
+
+        {/* Job Grid & Filters Layout */}
+        <div className="flex flex-col lg:flex-row gap-10">
+          
+          {/* Main Job Grid */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Latest Openings</h2>
+              <span className="text-muted text-sm">{jobsData.length} jobs found</span>
+            </div>
+            
+            <div className="space-y-4">
+              {jobsData.map((job) => (
+                <JobCard key={job.id} {...job} />
+              ))}
+            </div>
+
+            {/* Pagination Placeholder */}
+            <div className="mt-12 flex justify-center">
+               <button className="px-6 py-3 border border-border dark:border-border-dark rounded-xl font-medium hover:bg-surface dark:hover:bg-surface-dark transition-colors">
+                  Load More Jobs
+               </button>
+            </div>
+          </div>
+
+        </div>
+
+        {/* AdSlot - Pre Footer */}
+        <div className="mt-20">
+          <AdSlot position="pre-footer" />
+        </div>
+
+        {/* SEO Paragraph */}
+        <div className="mt-16 bg-surface dark:bg-surface-dark p-8 rounded-2xl border border-border dark:border-border-dark text-sm text-muted">
+          <h2 className="text-lg font-bold text-foreground mb-3">About Tech Jobs in Pakistan</h2>
+          <p>
+            Whether you are a seasoned professional or a fresh graduate looking for <strong>internships in Pakistan</strong>, our platform offers a comprehensive list of opportunities. The software engineering industry in Pakistan is booming, with extensive demand for React, Node.js, MERN stack, and Artificial Intelligence developers. Looking for flexibility? You can also explore our dedicated sections for <a href="/remote-jobs" className="text-primary hover:underline">Remote only jobs</a> to work with global companies from the comfort of your home in Lahore, Karachi, or Islamabad. Discover the best career growth opportunities tailored for Pakistani developers at PakTechJobs.
+          </p>
+        </div>
+
+        {/* Resume Review CTA */}
+        <div className="mt-16">
+          <ResumeReviewCTA />
+        </div>
+
       </div>
+
+      {/* Newsletter Signup (Edge to Edge) */}
+      <div className="mt-20 -mx-4 sm:-mx-6 lg:-mx-8 -mb-20">
+        <NewsletterSignup />
+      </div>
+
     </div>
   );
 }

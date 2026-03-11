@@ -1,6 +1,8 @@
 import { resources, getResourceBySlug } from "@/data/resources";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
+import ResumeReviewCTA from "@/components/ResumeReviewCTA";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -161,8 +163,16 @@ export default async function ResourcePage({ params }: PageProps) {
         <p className="text-lg text-muted">{resource.excerpt}</p>
       </div>
 
+      <div className="mb-10">
+        <AdSlot position="post-intro" />
+      </div>
+
       {/* Content */}
       <article className="mb-12">{renderContent(resource.content)}</article>
+
+      <div className="mb-12">
+        <ResumeReviewCTA />
+      </div>
 
       {/* Back link */}
       <div className="text-center pt-8 border-t border-border dark:border-border-dark">

@@ -38,6 +38,9 @@ export default function ResourcesPage() {
                     {resource.category}
                   </span>
                   <span className="text-xs text-muted">{resource.readTime}</span>
+                  {resource.publishDate && (
+                    <span className="text-xs text-muted">Updated {resource.publishDate}</span>
+                  )}
                 </div>
                 <h2 className="text-lg font-semibold group-hover:text-primary transition-colors mb-2">
                   {resource.title}

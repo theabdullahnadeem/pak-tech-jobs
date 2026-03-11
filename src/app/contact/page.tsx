@@ -20,7 +20,7 @@ export default function ContactPage() {
     });
 
     try {
-      const res = await fetch("https://formsubmit.co/ajax/paktechhjobs@gmail.com", {
+      const res = await fetch("https://formsubmit.co/ajax/paktechjobs@gmail.com", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
@@ -56,8 +56,8 @@ export default function ContactPage() {
           <div className="p-5 rounded-xl border border-border dark:border-border-dark bg-card dark:bg-card-dark">
             <span className="text-2xl block mb-2">📧</span>
             <h3 className="font-semibold mb-1">Email</h3>
-            <a href="mailto:paktechhjobs@gmail.com" className="text-sm text-primary hover:underline">
-              paktechhjobs@gmail.com
+            <a href="mailto:paktechjobs@gmail.com" className="text-sm text-primary hover:underline">
+              paktechjobs@gmail.com
             </a>
           </div>
 

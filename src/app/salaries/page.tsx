@@ -44,7 +44,6 @@ export default function SalariesPage() {
   return (
     <div ref={containerRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
       <div className="text-center mb-14">
-        <div className="salary-icon-bounce text-5xl mb-4">💰</div>
         <h1 className="salary-heading-text text-3xl sm:text-4xl font-bold mb-4">
           Software Engineer <span className="gradient-text">Salary in Pakistan</span> 2026
         </h1>

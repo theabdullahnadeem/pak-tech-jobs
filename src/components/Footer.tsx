@@ -1,20 +1,32 @@
 import Link from "next/link";
 
-const quickLinks = [
-  { href: "/salaries", label: "Salary Guides" },
-  { href: "/tools", label: "Career Tools" },
-  { href: "/resources", label: "Resources" },
-  { href: "/courses", label: "Courses" },
-  { href: "/jobs", label: "Jobs" },
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact" },
+const browseJobsLinks = [
+  { href: "/remote-jobs", label: "Remote Jobs" },
+  { href: "/jobs-in-lahore", label: "Lahore Jobs" },
+  { href: "/jobs-in-karachi", label: "Karachi Jobs" },
+  { href: "/internships-pakistan", label: "Internships" },
+  { href: "/fresh-graduate-it-jobs", label: "Fresh Graduate Jobs" },
 ];
 
-const toolLinks = [
-  { href: "/tools/salary-after-tax-calculator", label: "Tax Calculator" },
-  { href: "/tools/salary-comparison-tool", label: "Salary Comparison" },
-  { href: "/tools/freelance-rate-calculator", label: "Freelance Rates" },
-  { href: "/tools/resume-strength-checker", label: "Resume Checker" },
+const bySkillLinks = [
+  { href: "/react-jobs-pakistan", label: "React Jobs" },
+  { href: "/nodejs-jobs-pakistan", label: "Node.js Jobs" },
+  { href: "/mern-jobs-pakistan", label: "MERN Jobs" },
+  { href: "/ai-jobs-pakistan", label: "AI Jobs" },
+  { href: "/devops-jobs-pakistan", label: "DevOps Jobs" },
+];
+
+const companyLinks = [
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: "#", label: "Advertise" },
+];
+
+const resourceLinks = [
+  { href: "/salaries", label: "Salary Calculators & Guides" },
+  { href: "/tools", label: "Developer Tools" },
+  { href: "/resources", label: "Career Advice" },
+  { href: "/courses", label: "Top Courses" },
 ];
 
 export default function Footer() {
@@ -25,26 +37,20 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🚀</span>
+              <span className="text-2xl">⚡</span>
               <span className="font-bold text-lg text-white">PakTechJobs</span>
             </Link>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Your go-to resource for tech salaries, career tools, and professional growth in Pakistan.
+            <p className="text-sm text-gray-400 leading-relaxed mb-6">
+              Free salary guides, career tools, and resources for tech professionals in Pakistan.
             </p>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">
-              Quick Links
+            
+            <h3 className="font-semibold text-white mb-3 text-sm uppercase tracking-wider">
+              Tools & Resources
             </h3>
             <ul className="space-y-2">
-              {quickLinks.map((link) => (
+              {resourceLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-gray-400 hover:text-primary transition-colors"
-                  >
+                  <Link href={link.href} className="text-sm text-gray-400 hover:text-primary transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -52,18 +58,15 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Tools */}
+          {/* Browse Jobs */}
           <div>
             <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">
-              Tools
+              Browse Jobs
             </h3>
             <ul className="space-y-2">
-              {toolLinks.map((link) => (
+              {browseJobsLinks.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-gray-400 hover:text-primary transition-colors"
-                  >
+                  <Link href={link.href} className="text-sm text-gray-400 hover:text-primary transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -71,50 +74,35 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* By Skill */}
           <div>
             <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">
-              Connect
+              By Skill
             </h3>
             <ul className="space-y-2">
-              <li>
-                <a
-                  href="https://twitter.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-400 hover:text-primary transition-colors"
-                >
-                  Twitter / X
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.linkedin.com/in/abdullah-nadeem-ceo-digivixo/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-400 hover:text-primary transition-colors"
-                >
-                  LinkedIn
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/ab9898998989898"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-400 hover:text-primary transition-colors"
-                >
-                  GitHub
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:paktechhjobs@gmail.com"
-                  className="text-sm text-gray-400 hover:text-primary transition-colors"
-                >
-                  paktechhjobs@gmail.com
-                </a>
-              </li>
+              {bySkillLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-gray-400 hover:text-primary transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h3 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">
+              Company
+            </h3>
+            <ul className="space-y-2">
+              {companyLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-gray-400 hover:text-primary transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

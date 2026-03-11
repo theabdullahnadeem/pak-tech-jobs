@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Us",
-  description: "Learn about PakTechJobs — Pakistan's leading resource for tech salary data, career tools, and professional development.",
+  title: "About PakTechJobs — Pakistan's Tech Career Resource",
+  description: "Learn about PakTechJobs — Pakistan's most detailed resource for tech salary guides, free career tools, and professional development for software engineers.",
+  openGraph: {
+    title: "About PakTechJobs — Pakistan's Tech Career Resource",
+    description: "Free salary guides, career tools, and resources for tech professionals in Pakistan.",
+  },
 };
 
 export default function AboutPage() {
@@ -116,11 +120,41 @@ export default function AboutPage() {
               Contact Us
             </Link>
             <a
-              href="mailto:paktechhjobs@gmail.com"
+              href="mailto:paktechjobs@gmail.com"
               className="px-6 py-3 border border-border dark:border-border-dark hover:border-primary/50 font-medium rounded-xl transition-all text-center"
             >
-              paktechhjobs@gmail.com
+              paktechjobs@gmail.com
             </a>
+          </div>
+        </section>
+
+        {/* B6: Founder Section */}
+        <section className="border-t border-border dark:border-border-dark pt-10">
+          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <span>👤</span> Who Built This
+          </h2>
+          <div className="p-6 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark flex flex-col sm:flex-row gap-6 items-start">
+            <div className="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold">
+              AN
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg mb-1">Abdullah Nadeem</h3>
+              <p className="text-sm text-primary font-medium mb-3">Founder, PakTechJobs</p>
+              <p className="text-sm text-muted leading-relaxed mb-4">
+                I built PakTechJobs because I saw how much confusion existed around tech salaries in Pakistan — developers were underpaid because they lacked data, and companies set ranges without market benchmarks. This platform is my attempt to fix that: free, transparent salary data and career tools for every tech professional in Pakistan.
+              </p>
+              <div className="flex gap-3">
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition-colors"
+                >
+                  Get in Touch
+                </Link>
+                <span className="text-xs text-muted self-center">
+                  LinkedIn company page coming soon
+                </span>
+              </div>
+            </div>
           </div>
         </section>
       </div>

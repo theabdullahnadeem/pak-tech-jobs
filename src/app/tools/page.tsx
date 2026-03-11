@@ -45,7 +45,6 @@ export default function ToolsPage() {
   return (
     <div ref={containerRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
       <div className="text-center mb-14">
-        <div className="tools-icon-spin text-5xl mb-4">🛠️</div>
         <h1 className="tools-heading-text text-3xl sm:text-4xl font-bold mb-4">
           Free <span className="gradient-text">Career Tools</span>
         </h1>
@@ -67,7 +66,8 @@ export default function ToolsPage() {
               <h2 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
                 {tool.shortTitle}
               </h2>
-              <p className="text-muted text-sm leading-relaxed mb-4">{tool.description}</p>
+              <p className="text-muted text-sm leading-relaxed mb-2">{tool.description}</p>
+              <p className="text-xs text-muted mb-4">Free &middot; No sign-up &middot; Instant results</p>
               <span className="inline-flex items-center gap-1 text-primary text-sm font-medium">
                 Try it free <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
               </span>

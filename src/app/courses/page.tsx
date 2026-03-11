@@ -95,7 +95,7 @@ export default function CoursesPage() {
             </span>
           </h1>
           <p className="courses-subtitle text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            The tech industry in Pakistan is booming. Whether you&apos;re a beginner or looking to upskill, the right course can transform your career and multiply your earning potential.
+            We&apos;ve curated the best learning paths for Pakistan&apos;s most in-demand tech skills — paired with free career guidance to help you choose the right one.
           </p>
         </div>
 
@@ -106,10 +106,10 @@ export default function CoursesPage() {
       <section className="py-14 bg-background border-b border-border dark:border-border-dark">
         <div className="stats-row max-w-5xl mx-auto px-4 grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
           {[
-            { value: "50,000+", label: "Open Tech Jobs" },
-            { value: "3–6x", label: "Salary Growth" },
-            { value: "200+", label: "Companies Hiring" },
-            { value: "90%", label: "Remote-Friendly" },
+            { value: "8", label: "Salary Guides" },
+            { value: "4", label: "Free Tools" },
+            { value: "6", label: "Course Tracks" },
+            { value: "Free", label: "To Use" },
           ].map((stat) => (
             <div key={stat.label} className="stat-item">
               <div className="text-3xl sm:text-4xl font-bold gradient-text">{stat.value}</div>

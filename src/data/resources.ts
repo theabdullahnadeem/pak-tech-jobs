@@ -4,6 +4,7 @@ export interface Resource {
   excerpt: string;
   category: string;
   readTime: string;
+  publishDate: string;
   content: string;
 }
 
@@ -14,6 +15,7 @@ export const resources: Resource[] = [
     excerpt: "Step-by-step roadmap to becoming a MERN stack developer in Pakistan. Learn MERN developer salary in Lahore, Karachi & Islamabad plus skills to earn more as a developer.",
     category: "Career Guide",
     readTime: "12 min read",
+    publishDate: "January 2026",
     content: `
 ## Introduction
 
@@ -91,6 +93,7 @@ Becoming a MERN developer in Pakistan is a realistic and rewarding career goal. 
     excerpt: "Skills to earn more as a developer in Pakistan. Discover the highest paying tech jobs in Pakistan and how to increase your software engineer salary to 200K+ per month.",
     category: "Salary Tips",
     readTime: "8 min read",
+    publishDate: "February 2026",
     content: `
 ## Introduction
 
@@ -175,6 +178,7 @@ The 200K+ salary bracket is achievable for dedicated tech professionals. Focus o
     excerpt: "Complete guide to software engineering internship salary Pakistan. Internship stipend Pakistan by company type, how to apply, and tips to convert to full-time.",
     category: "Internship Guide",
     readTime: "10 min read",
+    publishDate: "January 2026",
     content: `
 ## Introduction
 
@@ -253,6 +257,7 @@ A tech internship is your first step into Pakistan's growing tech industry. With
     excerpt: "Learn how to increase software engineer salary in Pakistan with proven negotiation strategies. Software engineer career path Pakistan with salary data.",
     category: "Salary Tips",
     readTime: "7 min read",
+    publishDate: "March 2026",
     content: `
 ## Introduction
 

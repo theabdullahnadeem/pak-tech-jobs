@@ -1,6 +1,8 @@
 import { salaryRoles, getSalaryBySlug, formatSalary } from "@/data/salaries";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
+import JobSearchBar from "@/components/JobSearchBar";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -64,15 +66,28 @@ export default async function SalaryPage({ params }: PageProps) {
           <span className="text-foreground">{role.shortTitle}</span>
         </nav>
 
-        {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-bold mb-4">{role.title}</h1>
+        {/* Title + metadata */}
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3">{role.title}</h1>
+        {/* B2: Last updated date */}
+        <p className="text-xs text-muted mb-2">Last updated: March 2026</p>
+        {/* B7: Data source note */}
+        <p className="text-xs text-muted mb-4 italic">Data compiled from job postings, recruiter surveys &amp; developer reports.</p>
         <p className="text-lg text-muted mb-10">{role.description}</p>
+
+        {/* AdSlot - Post Intro */}
+        <div className="mb-12">
+          <AdSlot position="post-intro" />
+        </div>
+
+        {/* Redirect Intent: Job Search Bar */}
+        <div className="mb-12 bg-primary/5 p-6 rounded-3xl border border-primary/20">
+          <h3 className="text-xl font-bold mb-4 text-center">Looking for {role.shortTitle} Jobs?</h3>
+          <JobSearchBar initialKeyword={role.shortTitle} />
+        </div>
 
         {/* Salary Breakdown */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span>💰</span> Salary Breakdown
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">Salary Breakdown</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { label: "Junior (0-1 yr)", range: role.salaryRange.junior, color: "from-blue-500 to-blue-600" },
@@ -99,9 +114,7 @@ export default async function SalaryPage({ params }: PageProps) {
 
         {/* Skills */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span>🛠️</span> Key Skills Affecting Salary
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">Key Skills Affecting Salary</h2>
           <div className="flex flex-wrap gap-2">
             {role.skills.map((skill) => (
               <span
@@ -116,9 +129,7 @@ export default async function SalaryPage({ params }: PageProps) {
 
         {/* City Comparison */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span>🏙️</span> City-wise Salary Comparison
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">City-wise Salary Comparison</h2>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -150,9 +161,7 @@ export default async function SalaryPage({ params }: PageProps) {
 
         {/* Career Roadmap */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span>🗺️</span> Career Roadmap
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">Career Roadmap</h2>
           <div className="space-y-4">
             {role.roadmap.map((step, index) => (
               <div
@@ -171,11 +180,14 @@ export default async function SalaryPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* AdSlot - Mid Content */}
+        <div className="mb-12 mt-8">
+          <AdSlot position="pre-footer" />
+        </div>
+
         {/* FAQ */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span>❓</span> Frequently Asked Questions
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
             {role.faqs.map((faq, index) => (
               <details
@@ -191,6 +203,50 @@ export default async function SalaryPage({ params }: PageProps) {
                 <p className="mt-3 text-muted leading-relaxed">{faq.answer}</p>
               </details>
             ))}
+          </div>
+        </section>
+
+        {/* B5: Submit Your Salary CTA */}
+        <section className="mb-12 p-6 rounded-2xl border border-primary/20 bg-primary/5">
+          <h2 className="text-xl font-bold mb-2">Know Your Salary? Help the Community.</h2>
+          <p className="text-sm text-muted mb-4">
+            Your anonymous submission helps thousands of Pakistani developers make better career decisions. Takes 2 minutes.
+          </p>
+          <Link
+            href="/contact?subject=Salary+Data+Submission"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-primary-dark transition-all"
+          >
+            Submit My Salary →
+          </Link>
+        </section>
+
+        {/* B3: Data disclaimer */}
+        <p className="text-xs text-muted italic mb-8 p-4 border border-border dark:border-border-dark rounded-xl bg-surface dark:bg-surface-dark">
+          ℹ️ All salary figures are estimates and may vary based on company, location, experience, negotiation skills, and market conditions. Use as a reference, not as guaranteed compensation.
+        </p>
+
+        {/* E3: Related Tools CTA */}
+        <section className="mb-12 p-6 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark">
+          <h2 className="text-lg font-bold mb-4">Useful Tools for {role.shortTitle}s</h2>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href="/tools/salary-after-tax-calculator"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-border dark:border-border-dark hover:border-primary/50 hover:bg-primary/5 transition-all text-sm font-medium"
+            >
+              <span>🧮</span> Calculate Take-Home Pay →
+            </Link>
+            <Link
+              href="/tools/salary-comparison-tool"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-border dark:border-border-dark hover:border-primary/50 hover:bg-primary/5 transition-all text-sm font-medium"
+            >
+              <span>📊</span> Compare Your Salary →
+            </Link>
+            <Link
+              href="/tools/freelance-rate-calculator"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-border dark:border-border-dark hover:border-primary/50 hover:bg-primary/5 transition-all text-sm font-medium"
+            >
+              <span>💡</span> Freelance Rate Calculator →
+            </Link>
           </div>
         </section>
 
