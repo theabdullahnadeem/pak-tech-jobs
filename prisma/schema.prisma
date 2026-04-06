@@ -1,0 +1,247 @@
+// prisma/schema.prisma
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  APPLICANT
+  RECRUITER
+  ADMIN
+}
+
+enum PipelineStage {
+  APPLIED
+  SEEN
+  SHORTLISTED
+  INTERVIEW
+  OFFER
+  REJECTED
+  EXPIRED
+}
+
+enum RejectionReason {
+  PORTFOLIO_GAP
+  SALARY_MISMATCH
+  SPECIFIC_SKILL_MISSING
+  ROLE_FILLED
+  OVERQUALIFIED
+}
+
+enum JobType {
+  FULL_TIME
+  REMOTE
+  CONTRACT
+  INTERNSHIP
+  PART_TIME
+}
+
+enum ExperienceLevel {
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+}
+
+enum NotificationType {
+  APPLICATION_STATUS_CHANGE
+  DIRECT_MESSAGE
+  SLA_WARNING
+  SLA_BREACH
+  REJECTION_REASON
+  RECRUITER_APPROVED
+  RECRUITER_REJECTED
+  SALARY_APPROVED
+  SALARY_REJECTED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String
+  role          Role      @default(APPLICANT)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Applicant fields
+  skills              String[]
+  experienceLevel     ExperienceLevel?
+  location            String?
+  openToOpportunities Boolean  @default(false)
+  targetRoles         String[]
+
+  // Recruiter fields
+  companyName          String?
+  businessEmail        String?
+  recruiterVerified    Boolean @default(false)
+  suspended            Boolean @default(false)
+  responseRate         Float   @default(100)
+  avgResponseTimeHours Float?
+
+  jobPosts                  JobPost[]
+  applications              Application[]
+  notifications             Notification[]
+  salaryEntries             SalaryEntry[]
+  sentMessages              Message[]       @relation("SentMessages")
+  messageThreadsAsApplicant MessageThread[] @relation("ApplicantThreads")
+  messageThreadsAsRecruiter MessageThread[] @relation("RecruiterThreads")
+  headhuntOutreachSent      HeadhuntOutreach[] @relation("OutreachSent")
+  headhuntOutreachReceived  HeadhuntOutreach[] @relation("OutreachReceived")
+}
+
+model JobPost {
+  id                    String          @id @default(cuid())
+  recruiterId           String
+  recruiter             User            @relation(fields: [recruiterId], references: [id])
+  title                 String
+  description           String
+  skills                String[]
+  location              String
+  city                  String
+  salaryMin             Int
+  salaryMax             Int
+  experienceLevel       ExperienceLevel
+  jobType               JobType
+  category              String[]
+  isActive              Boolean         @default(true)
+  isClosed              Boolean         @default(false)
+  isInactiveLowResponse Boolean         @default(false)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  requiredFields        String[]        @default(["name", "email"])
+
+  applications Application[]
+
+  @@index([city])
+  @@index([jobType])
+  @@index([experienceLevel])
+  @@index([isActive, isClosed])
+}
+
+model Application {
+  id              String           @id @default(cuid())
+  jobPostId       String
+  jobPost         JobPost          @relation(fields: [jobPostId], references: [id])
+  applicantId     String
+  applicant       User             @relation(fields: [applicantId], references: [id])
+  stage           PipelineStage    @default(APPLIED)
+  rejectionReason RejectionReason?
+  recruiterNotes  String?
+  applicantName      String?
+  applicantEmail     String?
+  applicantPhone     String?
+  yearsOfExperience  Int?
+  coverLetter        String?
+  cvPublicId         String?
+  cvFileName         String?
+  submittedAt     DateTime         @default(now())
+  firstSeenAt     DateTime?
+  firstActionAt   DateTime?
+  slaWarning7Sent  Boolean         @default(false)
+  slaWarning13Sent Boolean         @default(false)
+  updatedAt       DateTime         @updatedAt
+
+  messageThread MessageThread?
+
+  @@unique([jobPostId, applicantId])
+}
+
+model MessageThread {
+  id                String       @id @default(cuid())
+  applicationId     String?      @unique
+  application       Application? @relation(fields: [applicationId], references: [id])
+  applicantId       String
+  applicant         User         @relation("ApplicantThreads", fields: [applicantId], references: [id])
+  recruiterId       String
+  recruiter         User         @relation("RecruiterThreads", fields: [recruiterId], references: [id])
+  isHeadhunt        Boolean      @default(false)
+  applicantAccepted Boolean?
+  createdAt         DateTime     @default(now())
+
+  messages Message[]
+}
+
+model Message {
+  id          String        @id @default(cuid())
+  threadId    String
+  thread      MessageThread @relation(fields: [threadId], references: [id])
+  senderId    String
+  sender      User          @relation("SentMessages", fields: [senderId], references: [id])
+  content     String
+  sentAt      DateTime      @default(now())
+  deliveredAt DateTime?
+  readAt      DateTime?
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}
+
+model SalaryEntry {
+  id                 String             @id @default(cuid())
+  submittedById      String
+  submittedBy        User               @relation(fields: [submittedById], references: [id])
+  roleTitle          String
+  experienceLevel    ExperienceLevel
+  city               String
+  salaryAmount       Int
+  employmentType     JobType
+  techStack          String[]
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  evidenceUrl        String?
+  createdAt          DateTime           @default(now())
+  reviewedAt         DateTime?
+}
+
+model HeadhuntOutreach {
+  id          String   @id @default(cuid())
+  recruiterId String
+  recruiter   User     @relation("OutreachSent", fields: [recruiterId], references: [id])
+  applicantId String
+  applicant   User     @relation("OutreachReceived", fields: [applicantId], references: [id])
+  sentAt      DateTime @default(now())
+  declinedAt  DateTime?
+
+  @@unique([recruiterId, applicantId])
+}
+
+model DemandSnapshot {
+  id             String   @id @default(cuid())
+  skill          String
+  category       String?
+  city           String?
+  count          Int
+  classification String   @default("Neutral")
+  snapshotDate   DateTime
+  timeRange      Int
+
+  @@unique([skill, timeRange, snapshotDate])
+  @@index([skill, snapshotDate])
+}

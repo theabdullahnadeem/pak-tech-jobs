@@ -1,0 +1,483 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface PendingRecruiter {
+  id: string;
+  name: string;
+  email: string;
+  companyName: string | null;
+  businessEmail: string | null;
+  createdAt: string;
+}
+
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  suspended: boolean;
+  recruiterVerified: boolean;
+  companyName: string | null;
+  businessEmail: string | null;
+  skills: string[];
+  experienceLevel: string | null;
+  location: string | null;
+  _count: { jobPosts: number; applications: number };
+}
+
+interface AdminJob {
+  id: string;
+  title: string;
+  city: string;
+  jobType: string;
+  experienceLevel: string;
+  isActive: boolean;
+  isClosed: boolean;
+  createdAt: string;
+  salaryMin: number;
+  salaryMax: number;
+  skills: string[];
+  recruiter: { id: string; name: string; companyName: string | null; email: string };
+  _count: { applications: number };
+}
+
+type Tab = "pending" | "recruiters" | "seekers" | "jobs";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function fmt(d: string) {
+  return new Date(d).toLocaleDateString("en-PK", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function fmtSalary(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return `${n}`;
+}
+
+const JOB_TYPE_LABEL: Record<string, string> = {
+  FULL_TIME: "Full-time", REMOTE: "Remote", CONTRACT: "Contract",
+  INTERNSHIP: "Internship", PART_TIME: "Part-time",
+};
+const EXP_LABEL: Record<string, string> = {
+  JUNIOR: "Junior", MID: "Mid", SENIOR: "Senior", LEAD: "Lead",
+};
+
+// ─── Reject Form ──────────────────────────────────────────────────────────────
+
+function RejectForm({ onConfirm, onCancel, loading }: {
+  onConfirm: (reason: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [reason, setReason] = useState("");
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      <textarea
+        rows={2}
+        placeholder="Reason for rejection (required)"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500/40"
+      />
+      <div className="flex gap-2">
+        <button disabled={loading || !reason.trim()} onClick={() => onConfirm(reason.trim())}
+          className="px-4 py-1.5 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50">
+          {loading ? "Rejecting…" : "Confirm Reject"}
+        </button>
+        <button onClick={onCancel} className="px-4 py-1.5 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-white">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Suspend Form ─────────────────────────────────────────────────────────────
+
+function SuspendForm({ onConfirm, onCancel, loading, action }: {
+  onConfirm: (reason: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+  action: "suspend" | "lift";
+}) {
+  const [reason, setReason] = useState("");
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      <textarea
+        rows={2}
+        placeholder={`Reason to ${action} suspension (required)`}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500/40"
+      />
+      <div className="flex gap-2">
+        <button disabled={loading || !reason.trim()} onClick={() => onConfirm(reason.trim())}
+          className="px-4 py-1.5 rounded-lg bg-yellow-500 text-white text-sm font-medium hover:bg-yellow-600 disabled:opacity-50">
+          {loading ? "Updating…" : "Confirm"}
+        </button>
+        <button onClick={onCancel} className="px-4 py-1.5 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-white">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Pending Approvals Tab ────────────────────────────────────────────────────
+
+function PendingTab({ recruiters, setRecruiters, onApprove }: {
+  recruiters: PendingRecruiter[];
+  setRecruiters: React.Dispatch<React.SetStateAction<PendingRecruiter[]>>;
+  onApprove: (id: string) => void;
+}) {
+  function remove(id: string) { setRecruiters(p => p.filter(r => r.id !== id)); }
+
+  return (
+    <div className="space-y-4">
+      {recruiters.length === 0 ? (
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-4xl mb-3">✅</p>
+          <p className="font-medium">No pending verifications</p>
+        </div>
+      ) : recruiters.map(r => (
+        <PendingRecruiterCard key={r.id} recruiter={r} onRemove={remove} onApprove={onApprove} />
+      ))}
+    </div>
+  );
+}
+
+function PendingRecruiterCard({ recruiter, onRemove, onApprove }: { recruiter: PendingRecruiter; onRemove: (id: string) => void; onApprove: (id: string) => void }) {
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function approve() {
+    setApproving(true); setError("");
+    try {
+      const res = await fetch(`/api/admin/recruiters/${recruiter.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve" }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to approve");
+      onRemove(recruiter.id);
+      onApprove(recruiter.id);
+    } catch (e) { setError(e instanceof Error ? e.message : "Error"); }
+    finally { setApproving(false); }
+  }
+
+  async function reject(reason: string) {
+    setRejecting(true); setError("");
+    try {
+      const res = await fetch(`/api/admin/recruiters/${recruiter.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject", reason }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to reject");
+      onRemove(recruiter.id);
+    } catch (e) { setError(e instanceof Error ? e.message : "Error"); setRejecting(false); }
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-700 bg-gray-900 p-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-sm text-white">{recruiter.name}</span>
+            {recruiter.companyName && <span className="text-xs text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full">{recruiter.companyName}</span>}
+          </div>
+          <p className="text-xs text-gray-400">{recruiter.email}</p>
+          {recruiter.businessEmail && <p className="text-xs text-gray-400">Business: {recruiter.businessEmail}</p>}
+          <p className="text-xs text-gray-400">Registered {fmt(recruiter.createdAt)}</p>
+        </div>
+        {!rejectOpen && (
+          <div className="flex gap-2">
+            <button disabled={approving} onClick={approve}
+              className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+              {approving ? "Approving…" : "Approve"}
+            </button>
+            <button onClick={() => setRejectOpen(true)}
+              className="px-4 py-1.5 rounded-lg border border-red-500/40 text-red-400 text-sm font-medium hover:bg-red-500/10">
+              Reject
+            </button>
+          </div>
+        )}
+      </div>
+      {rejectOpen && <RejectForm onConfirm={reject} onCancel={() => setRejectOpen(false)} loading={rejecting} />}
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+    </div>
+  );
+}
+
+// ─── All Recruiters Tab ───────────────────────────────────────────────────────
+
+function RecruitersTab({ users, setUsers }: { users: AdminUser[]; setUsers: React.Dispatch<React.SetStateAction<AdminUser[]>> }) {
+  const recruiters = users.filter(u => u.role === "RECRUITER");
+  const [search, setSearch] = useState("");
+  const filtered = recruiters.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.email.toLowerCase().includes(search.toLowerCase()) ||
+    (r.companyName ?? "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  function updateUser(id: string, patch: Partial<AdminUser>) {
+    setUsers(p => p.map(u => u.id === id ? { ...u, ...patch } : u));
+  }
+
+  return (
+    <div>
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search recruiters…"
+        className="mb-4 w-full max-w-sm px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+      <div className="space-y-3">
+        {filtered.length === 0 ? <p className="text-sm text-gray-400 py-10 text-center">No recruiters found</p>
+          : filtered.map(r => <RecruiterRow key={r.id} user={r} onUpdate={updateUser} />)}
+      </div>
+    </div>
+  );
+}
+
+function RecruiterRow({ user, onUpdate }: { user: AdminUser; onUpdate: (id: string, patch: Partial<AdminUser>) => void }) {
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [suspending, setSuspending] = useState(false);
+  const [error, setError] = useState("");
+
+  async function toggleSuspend(reason: string) {
+    setSuspending(true); setError("");
+    const action = user.suspended ? "lift" : "suspend";
+    try {
+      const res = await fetch(`/api/admin/suspension/${user.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, reason }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed");
+      onUpdate(user.id, { suspended: !user.suspended });
+      setSuspendOpen(false);
+    } catch (e) { setError(e instanceof Error ? e.message : "Error"); }
+    finally { setSuspending(false); }
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-700 bg-gray-900 p-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-sm text-white">{user.name}</span>
+            {user.companyName && <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{user.companyName}</span>}
+            {user.recruiterVerified
+              ? <span className="text-xs bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full">✓ Verified</span>
+              : <span className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded-full">Pending</span>}
+            {user.suspended && <span className="text-xs bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full">Suspended</span>}
+          </div>
+          <p className="text-xs text-gray-400">{user.email} {user.businessEmail ? `· ${user.businessEmail}` : ""}</p>
+          <p className="text-xs text-gray-400">Joined {fmt(user.createdAt)} · {user._count.jobPosts} job posts</p>
+        </div>
+        {!suspendOpen && (
+          <button onClick={() => setSuspendOpen(true)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${user.suspended ? "border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10" : "border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"}`}>
+            {user.suspended ? "Lift Suspension" : "Suspend"}
+          </button>
+        )}
+      </div>
+      {suspendOpen && <SuspendForm onConfirm={toggleSuspend} onCancel={() => setSuspendOpen(false)} loading={suspending} action={user.suspended ? "lift" : "suspend"} />}
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+    </div>
+  );
+}
+
+// ─── Job Seekers Tab ──────────────────────────────────────────────────────────
+
+function SeekersTab({ users }: { users: AdminUser[] }) {
+  const seekers = users.filter(u => u.role === "APPLICANT");
+  const [search, setSearch] = useState("");
+  const filtered = seekers.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search job seekers…"
+        className="mb-4 w-full max-w-sm px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+      <div className="overflow-x-auto rounded-xl border border-gray-700">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-800 text-gray-400 text-xs uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-3 text-left">Name</th>
+              <th className="px-4 py-3 text-left">Email</th>
+              <th className="px-4 py-3 text-left">Level</th>
+              <th className="px-4 py-3 text-left">Location</th>
+              <th className="px-4 py-3 text-left">Skills</th>
+              <th className="px-4 py-3 text-left">Applications</th>
+              <th className="px-4 py-3 text-left">Joined</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-700">
+            {filtered.length === 0 ? (
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-500">No job seekers found</td></tr>
+            ) : filtered.map(s => (
+              <tr key={s.id} className="hover:bg-gray-800/50 transition-colors">
+                <td className="px-4 py-3 font-medium text-white">{s.name}</td>
+                <td className="px-4 py-3 text-gray-400">{s.email}</td>
+                <td className="px-4 py-3 text-gray-400">{s.experienceLevel ? EXP_LABEL[s.experienceLevel] ?? s.experienceLevel : "—"}</td>
+                <td className="px-4 py-3 text-gray-400">{s.location ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1">
+                    {s.skills.slice(0, 3).map(sk => (
+                      <span key={sk} className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs">{sk}</span>
+                    ))}
+                    {s.skills.length > 3 && <span className="text-xs text-gray-400">+{s.skills.length - 3}</span>}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-gray-400">{s._count.applications}</td>
+                <td className="px-4 py-3 text-gray-400">{fmt(s.createdAt)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Job Posts Tab ────────────────────────────────────────────────────────────
+
+function JobsTab({ jobs }: { jobs: AdminJob[] }) {
+  const [search, setSearch] = useState("");
+  const filtered = jobs.filter(j =>
+    j.title.toLowerCase().includes(search.toLowerCase()) ||
+    j.city.toLowerCase().includes(search.toLowerCase()) ||
+    (j.recruiter.companyName ?? "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search jobs…"
+        className="mb-4 w-full max-w-sm px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+      <div className="overflow-x-auto rounded-xl border border-gray-700">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-800 text-gray-400 text-xs uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-3 text-left">Title</th>
+              <th className="px-4 py-3 text-left">Company</th>
+              <th className="px-4 py-3 text-left">City</th>
+              <th className="px-4 py-3 text-left">Type</th>
+              <th className="px-4 py-3 text-left">Salary</th>
+              <th className="px-4 py-3 text-left">Apps</th>
+              <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-left">Posted</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-700">
+            {filtered.length === 0 ? (
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-500">No jobs found</td></tr>
+            ) : filtered.map(j => (
+              <tr key={j.id} className="hover:bg-gray-800/50 transition-colors">
+                <td className="px-4 py-3 font-medium text-white max-w-[200px] truncate">{j.title}</td>
+                <td className="px-4 py-3 text-gray-400">{j.recruiter.companyName ?? j.recruiter.name}</td>
+                <td className="px-4 py-3 text-gray-400">{j.city}</td>
+                <td className="px-4 py-3 text-gray-400">{JOB_TYPE_LABEL[j.jobType] ?? j.jobType}</td>
+                <td className="px-4 py-3 text-gray-400">PKR {fmtSalary(j.salaryMin)}–{fmtSalary(j.salaryMax)}</td>
+                <td className="px-4 py-3 text-gray-400">{j._count.applications}</td>
+                <td className="px-4 py-3">
+                  {j.isClosed
+                    ? <span className="text-xs bg-gray-500/10 text-gray-400 px-2 py-0.5 rounded-full">Closed</span>
+                    : j.isActive
+                      ? <span className="text-xs bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full">Active</span>
+                      : <span className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded-full">Inactive</span>}
+                </td>
+                <td className="px-4 py-3 text-gray-400">{fmt(j.createdAt)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<Tab>("pending");
+
+  const [pending, setPending] = useState<PendingRecruiter[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+
+  const [jobs, setJobs] = useState<AdminJob[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/recruiters/pending")
+      .then(r => r.json()).then(setPending).catch(() => {}).finally(() => setPendingLoading(false));
+    fetch("/api/admin/users")
+      .then(r => r.json()).then(setUsers).catch(() => {}).finally(() => setUsersLoading(false));
+    fetch("/api/admin/jobs")
+      .then(r => r.json()).then(setJobs).catch(() => {}).finally(() => setJobsLoading(false));
+  }, []);
+
+  function handleApprove(id: string) {
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, recruiterVerified: true } : u));
+  }
+
+  const tabs: { key: Tab; label: string; badge?: number }[] = [
+    { key: "pending", label: "Pending Approvals", badge: pendingLoading ? undefined : pending.length },
+    { key: "recruiters", label: "Recruiters", badge: usersLoading ? undefined : users.filter(u => u.role === "RECRUITER").length },
+    { key: "seekers", label: "Job Seekers", badge: usersLoading ? undefined : users.filter(u => u.role === "APPLICANT").length },
+    { key: "jobs", label: "Job Posts", badge: jobsLoading ? undefined : jobs.length },
+  ];
+
+  const isLoading = (activeTab === "pending" && pendingLoading) ||
+    (["recruiters", "seekers"].includes(activeTab) && usersLoading) ||
+    (activeTab === "jobs" && jobsLoading);
+
+  return (
+    <div className="min-h-screen bg-gray-950 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-white">Admin Dashboard</h1>
+          <p className="text-gray-400 mt-1 text-sm">Manage users, recruiters, and job posts.</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 rounded-xl bg-gray-800 border border-gray-700 mb-6 w-fit flex-wrap">
+          {tabs.map(tab => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.key
+                  ? "bg-gray-900 text-white shadow-sm border border-gray-600"
+                  : "text-gray-400 hover:text-white"
+              }`}>
+              {tab.label}
+              {tab.badge !== undefined && tab.badge > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <>
+            {activeTab === "pending" && <PendingTab recruiters={pending} setRecruiters={setPending} onApprove={handleApprove} />}
+            {activeTab === "recruiters" && <RecruitersTab users={users} setUsers={setUsers} />}
+            {activeTab === "seekers" && <SeekersTab users={users} />}
+            {activeTab === "jobs" && <JobsTab jobs={jobs} />}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

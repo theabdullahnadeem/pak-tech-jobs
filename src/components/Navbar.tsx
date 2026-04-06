@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import NotificationBell from "./NotificationBell";
 
 const navLinks = [
   { href: "/salaries", label: "Salaries" },
@@ -10,9 +12,16 @@ const navLinks = [
   { href: "/courses", label: "Courses" },
 ];
 
+function getDashboardHref(role?: string) {
+  if (role === "RECRUITER") return "/recruiter/dashboard";
+  if (role === "ADMIN") return "/admin";
+  return "/dashboard";
+}
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [jobsDropdownOpen, setJobsDropdownOpen] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass">
@@ -69,6 +78,42 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+          </div>
+
+          {/* Auth / Role-aware links + Notification Bell */}
+          <div className="hidden md:flex items-center gap-1">
+            {session?.user ? (
+              <>
+                <Link
+                  href={getDashboardHref(session.user.role as string)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-primary/10 transition-all duration-200"
+                >
+                  Dashboard
+                </Link>
+                <NotificationBell />
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-primary/10 transition-all duration-200"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-primary/10 transition-all duration-200"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary/90 transition-all duration-200"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Button */}
@@ -129,6 +174,31 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+            </div>
+
+            <div className="pt-2 border-t border-border">
+              {session?.user ? (
+                <>
+                  <Link
+                    href={getDashboardHref(session.user.role as string)}
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }}
+                    className="block w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setMobileOpen(false)} className="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface">Sign in</Link>
+                  <Link href="/register" onClick={() => setMobileOpen(false)} className="block px-4 py-2 rounded-lg text-sm font-medium text-primary hover:bg-surface">Register</Link>
+                </>
+              )}
             </div>
 
           </div>

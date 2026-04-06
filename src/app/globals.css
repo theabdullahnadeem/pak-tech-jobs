@@ -132,3 +132,12 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+.webkit-removed::-webkit-scrollbar {
+  display: none;
+}
+
+.webkit-removed {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}

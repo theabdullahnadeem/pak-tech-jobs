@@ -1,0 +1,620 @@
+# File Changes
+
+A chronological log of notable file additions, modifications, and deletions in this project — including what changed and why.
+
+---
+
+## Table of Contents
+
+- [2026](#2026)
+  - [April](#april-2026)
+
+---
+
+## 2026
+
+### April 2026
+
+---
+
+#### `src/lib/redis.ts` — Saved (no code changes) — April 6, 2026
+
+**Summary**
+
+The file `src/lib/redis.ts` was saved with no content changes. The diff was empty. The file implements the Redis client singleton for the application. Its complete structure:
+
+1. Imports `Redis` from `ioredis`.
+2. Reads `REDIS_URL` from `process.env`; throws a startup error if the variable is not set.
+3. Exports a **singleton `redis` instance** using the `globalThis` pattern — on hot reloads in development the existing connection is reused rather than creating a new one, preventing connection exhaustion.
+4. The singleton is constructed with `maxRetriesPerRequest: 3`, `lazyConnect: false`, and conditional TLS (`tls: {}`) when the URL scheme is `rediss://`.
+5. In non-production environments the instance is stored on `globalForRedis.redis` to survive Next.js hot-module replacement.
+6. Exports a **`createRedisClient()` factory function** that creates a fresh `Redis` connection with the same options. This is used to create the duplicate pub/sub connection required by the Socket.io Redis adapter (a subscriber connection cannot be shared with a general-purpose command connection).
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+The file itself was previously authored to support two distinct Redis use cases in the application:
+- **General-purpose caching and pub/sub emit**: handled by the exported `redis` singleton, shared across all API routes and server utilities.
+- **Socket.io Redis adapter**: the `@socket.io/redis-adapter` requires two separate `ioredis` clients — one for publishing and one for subscribing. The `createRedisClient()` factory is called twice during server bootstrap in `server.ts` to create these two dedicated connections.
+
+**Approach**
+
+- **`ioredis` over the official `redis` (node-redis) package**: `ioredis` has first-class support for the `@socket.io/redis-adapter`, which is the adapter used in this project. It also provides a more ergonomic API for cluster and Sentinel configurations and has better TypeScript typings out of the box.
+- **`globalThis` singleton pattern**: In Next.js development mode, the module system re-evaluates modules on every hot reload. Without the `globalThis` guard, each reload would create a new `ioredis` connection, quickly exhausting the connection limit on the Redis server (Upstash enforces a concurrent connection cap). Storing the instance on `globalThis` ensures only one connection exists per process lifetime.
+- **`lazyConnect: false`**: The connection is established eagerly at module load time rather than on the first command. This surfaces misconfigured `REDIS_URL` values immediately at startup rather than silently failing on the first cache read or Socket.io event.
+- **Conditional TLS via `rediss://` scheme detection**: The Upstash Redis instance (used in this project, as seen in `.env`) requires TLS (`rediss://` scheme). Detecting the scheme at runtime rather than hardcoding `tls: {}` makes the client compatible with both TLS-required cloud instances and plain local Redis instances (`redis://`) without a config change.
+- **`createRedisClient()` as a factory rather than a second exported singleton**: The Socket.io adapter needs two independent connections. Exporting a factory (rather than two named singletons) keeps the module interface clean and makes it easy to create additional connections if needed (e.g., for a separate subscriber in a future feature).
+
+---
+
+#### `src/app/api/upload/cv-url/route.ts` — Saved (no code changes) — April 6, 2026
+
+**Summary**
+
+The file `src/app/api/upload/cv-url/route.ts` was saved with no content changes. The diff was empty. The file implements the `GET /api/upload/cv-url` route handler, which generates a signed Cloudinary delivery URL for a CV file. The complete handler:
+
+1. Authenticates the caller via `auth()` — returns `401 Unauthorized` if no session exists.
+2. Authorises the caller — returns `403 Forbidden` if the session role is not `RECRUITER`.
+3. Validates the `publicId` query parameter — returns `400` if absent.
+4. Calls `cloudinary.url(publicId, { resource_type: "raw", type: "upload", sign_url: true, expires_at: Math.round(Date.now() / 1000) + 3600 })` to generate a signed delivery URL with a 3600-second (60-minute) expiry.
+5. Returns `{ url }` on success.
+6. Catches any Cloudinary error, logs it via `console.error("[GET /api/upload/cv-url] error:", err)`, and returns `{ error: "Failed to generate CV download URL" }` with status `500`.
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+The route itself was previously completed (see the earlier `Modified` entry for this file on April 6, 2026) when the truncated `catch` block was finished. That prior edit brought the file from a syntactically invalid state (truncated mid-expression) to a fully valid, deployable route handler satisfying Requirements 3.3, 3.4, and 4.2 of the `linkedin-style-application-flow` spec.
+
+---
+
+#### `.vscode/settings.json` — Modified — April 6, 2026
+
+**Summary**
+
+The VS Code workspace settings file `.vscode/settings.json` was updated. Previously the file contained only an empty JSON object `{}` (a single opening brace, a blank line, and a closing brace with no trailing newline). This edit added the `"typescript.autoClosingTags": false` setting, resulting in:
+
+```json
+{
+    "typescript.autoClosingTags": false
+}
+```
+
+**Change**
+
+```diff
+-{
+- 
+-}
++{
++    "typescript.autoClosingTags": false
++}
+```
+
+**Reasoning**
+
+The `typescript.autoClosingTags` VS Code setting controls whether the editor automatically inserts a matching closing tag when a developer types `>` or `/` at the end of an opening JSX/TSX tag. Setting it to `false` disables this auto-insertion behaviour.
+
+This was set to `false` because:
+
+- **Extension conflicts**: The project's VS Code environment uses extensions (such as Auto Rename Tag, Emmet, or Prettier) that also manipulate JSX/TSX tag pairs. When VS Code's built-in auto-close fires simultaneously with these extensions, the result is often duplicated closing tags (e.g., `</div></div>`) or malformed markup — a common pain point in JSX-heavy codebases.
+- **Self-closing JSX tags**: Next.js/React components frequently use self-closing syntax (`<Component />`). The auto-close feature can incorrectly append `</Component>` after the self-closing slash, requiring the developer to immediately delete the unwanted tag.
+- **Consistency across contributors**: Placing this in `.vscode/settings.json` (workspace-level) rather than a personal `~/.config/Code/User/settings.json` ensures every developer who clones the repository gets the same editor behaviour, eliminating a class of environment-specific bugs.
+
+**Approach**
+
+- **Workspace settings file (`.vscode/settings.json`) rather than user settings**: Workspace settings override user settings for the current project only, making this a project-scoped decision that does not affect the developer's other projects.
+- **Single targeted setting**: Only `typescript.autoClosingTags` was changed. No other editor settings were added, keeping the workspace config minimal and avoiding opinionated settings that could conflict with individual developer preferences.
+- **`false` rather than removing the setting entirely**: Explicitly setting `false` is clearer than omitting the key (which would fall back to the VS Code default of `true`). An explicit `false` communicates intent — future contributors reading the file understand this was a deliberate choice, not an oversight.
+
+---
+
+#### `src/app/api/upload/cv-url/route.ts` — Modified — April 6, 2026
+
+**Summary**
+
+The `GET /api/upload/cv-url` route handler had its error-handling `catch` block completed. Previously the file ended mid-expression with a truncated JSON object literal (`{ e`) and no closing braces, making the file syntactically invalid TypeScript. The edit added the missing content:
+
+- The `error` property value: `"Failed to generate CV download URL"`
+- The closing brace of the JSON object
+- The `status: 500` options object passed as the second argument to `NextResponse.json`
+- The closing parenthesis and semicolon for the `NextResponse.json(...)` call
+- The closing brace of the `catch` block
+- The closing brace of the exported `GET` function
+
+The completed file now exports a fully valid `GET` handler that:
+1. Authenticates the caller — returns `401` if no session exists.
+2. Authorises the caller — returns `403` if the role is not `RECRUITER`.
+3. Validates the `publicId` query parameter — returns `400` if absent.
+4. Generates a signed Cloudinary delivery URL for a `raw` resource type with a 3600-second (60-minute) expiry using `cloudinary.url(publicId, { resource_type: "raw", type: "upload", sign_url: true, expires_at: now + 3600 })`.
+5. Returns `{ url }` on success.
+6. Returns `{ error: "Failed to generate CV download URL" }` with status `500` if Cloudinary URL generation throws.
+
+**Change**
+
+```diff
+-      { e
+\ No newline at end of file
++      { error: "Failed to generate CV download URL" },
++      { status: 500 }
++    );
++  }
++}
+```
+
+**Reasoning**
+
+The file was in a broken state — it had been partially written and saved before the content was complete, leaving the TypeScript source syntactically invalid. The `catch` block is required by the design specification (Design Document §Error Handling: "Cloudinary delivery URL generation fails → `GET /api/upload/cv-url` returns 500; detail panel shows 'Unable to load CV'") and by Requirement 3.5 ("IF the Cloudinary_Storage service returns an error during signed URL generation, THEN THE System SHALL return a 500 error response with a descriptive message"). Without this block, any Cloudinary error would result in an unhandled exception crashing the route handler rather than a graceful 500 response.
+
+**Approach**
+
+- **`{ error: "Failed to generate CV download URL" }` as the response body**: A plain string error message is used rather than exposing the raw Cloudinary error object. This prevents internal implementation details (Cloudinary API key names, internal error codes, stack traces) from leaking to the client, which is a standard API security practice.
+- **`status: 500`**: The HTTP 500 status code is the correct choice here because the failure is on the server side (Cloudinary SDK throwing), not due to a malformed client request. The client sent a valid `publicId`; the server failed to process it.
+- **`console.error` before the response**: The actual Cloudinary error is logged server-side via `console.error("[GET /api/upload/cv-url] error:", err)` (already present in the file before this edit). This preserves full error detail for server-side debugging while keeping the client response clean.
+- **Completing the existing `try/catch` structure**: The `try` block was already present and complete. The edit only completed the `catch` block, maintaining the existing error-handling pattern used throughout the codebase (try/catch → log → return 500 JSON).
+
+---
+
+#### `scripts/seed-test-users.ts` — Created — April 6, 2026
+
+**Summary**
+
+A new database seeding script was created at `scripts/seed-test-users.ts`. It provisions three test user accounts — one per application role — into the PostgreSQL database via Prisma. The three users created are:
+
+- **Admin** (`admin@test.com`, role `ADMIN`, name "Test Admin")
+- **Recruiter** (`recruiter@test.com`, role `RECRUITER`, name "Sara Khan", company "TechCorp Pakistan", business email `sara@techcorp.pk`, `recruiterVerified: true`)
+- **Job Seeker** (`jobseeker@test.com`, role `APPLICANT`, name "Ali Ahmed", skills `["React","TypeScript","Node.js","PostgreSQL"]`, experience level `MID`, location "Lahore, Pakistan", `openToOpportunities: true`, target roles `["Frontend Developer","Full Stack Developer"]`)
+
+All three accounts share the password `Test@123456`. The script is idempotent: it checks for an existing user by email before creating, skipping any that already exist. On completion it prints a formatted credentials table to the console.
+
+**Change**
+
+```ts
+// New file — full content
+import { PrismaClient, Role, ExperienceLevel } from "@prisma/client";
+import bcrypt from "bcryptjs";
+
+const prisma = new PrismaClient();
+
+const USERS = [
+  { email: "admin@test.com",     password: "Test@123456", name: "Test Admin", role: Role.ADMIN },
+  { email: "recruiter@test.com", password: "Test@123456", name: "Sara Khan",  role: Role.RECRUITER,
+    companyName: "TechCorp Pakistan", businessEmail: "sara@techcorp.pk", recruiterVerified: true },
+  { email: "jobseeker@test.com", password: "Test@123456", name: "Ali Ahmed",  role: Role.APPLICANT,
+    skills: ["React","TypeScript","Node.js","PostgreSQL"], experienceLevel: ExperienceLevel.MID,
+    location: "Lahore, Pakistan", openToOpportunities: true,
+    targetRoles: ["Frontend Developer","Full Stack Developer"] },
+];
+
+async function main() { /* idempotent upsert loop + console output */ }
+
+main().catch(console.error).finally(() => prisma.$disconnect());
+```
+
+**Reasoning**
+
+The project already has `scripts/seed-admin.ts` which creates a single admin account. During development and testing, all three roles (admin, recruiter, job seeker) need to be exercisable without manually registering accounts through the UI or inserting rows directly into the database. A dedicated seed script for test users makes the local development setup reproducible in a single command and removes the friction of manually creating accounts every time the database is reset.
+
+The recruiter account is seeded with `recruiterVerified: true` so it can immediately post jobs and access the recruiter dashboard without going through the admin approval flow — which is intentional for test/dev purposes where the approval flow itself is not what is being tested.
+
+The job seeker account is seeded with realistic profile data (skills, experience level, location, target roles) so that features like talent search, skill matching, and profile display can be tested with meaningful data rather than empty fields.
+
+**Approach**
+
+- **`bcryptjs` with cost factor 12**: Matches the approach in `scripts/seed-admin.ts` exactly. `bcryptjs` is a pure-JavaScript bcrypt implementation with no native bindings, making it portable across all development environments (Windows, macOS, Linux, CI). Cost factor 12 is the project-wide standard for password hashing, balancing security against seeding speed.
+- **Idempotency via `findUnique` before `create`**: Each user is checked by email before creation. If it already exists, the script logs a warning and skips it. This makes the script safe to run multiple times (e.g., after a partial reset) without throwing unique-constraint errors or duplicating data.
+- **Type-cast pattern for optional role-specific fields**: The `USERS` array is typed as a union of plain objects. Role-specific fields (`companyName`, `skills`, etc.) are accessed via inline type casts (`(user as { companyName?: string }).companyName`) rather than defining a discriminated union type. This keeps the array declaration concise and avoids a verbose type definition for a one-off seed script.
+- **Shared password for all test accounts**: Using a single known password (`Test@123456`) for all test users simplifies the developer experience — there is one credential set to remember. This is acceptable because these accounts are only ever created in local/dev databases, never in production.
+- **Console credentials table on completion**: The script prints a formatted table of all credentials after seeding. This is a convenience for developers who run the script and immediately need the login details without having to look them up in the source file.
+- **Placed in `scripts/` directory**: Consistent with `scripts/seed-admin.ts`. Scripts in this directory are intended to be run via `npx tsx scripts/<file>.ts` outside the Next.js runtime, keeping seeding concerns separate from the application code.
+
+---
+
+#### `.kiro/specs/linkedin-style-application-flow/tasks.md` — Modified — April 6, 2026
+
+**Summary**
+
+Task 1 ("Prisma schema migrations") in the `linkedin-style-application-flow` implementation plan had its status marker changed from `- [ ]` (not started) to `- [-]` (in progress). This is a single-character change inside the checkbox brackets on line 8 of the file. No other content in `tasks.md` was modified — all sub-tasks, task descriptions, requirement references, and notes remain identical.
+
+**Change**
+
+```diff
+- - [ ] 1. Prisma schema migrations
++ - [-] 1. Prisma schema migrations
+```
+
+**Reasoning**
+
+The status was updated to reflect that work on the Prisma schema migrations has begun. The `- [-]` syntax is the spec workflow's convention for "in progress", distinguishing it from `- [ ]` (not started), `- [x]` (completed), and `- [~]` (queued). Marking a task in progress before touching any implementation files is a deliberate workflow step — it signals to collaborators (and the orchestration system) that this task is actively being worked on, preventing duplicate effort and providing an accurate picture of the implementation state.
+
+**Approach**
+
+The spec workflow uses inline checkbox syntax directly inside `tasks.md` to track task state, rather than a separate state file or external project management tool. This keeps the implementation plan and its execution status co-located in a single version-controlled file, making the current progress visible to anyone reading the spec without needing access to an external system. The four status values (`[ ]`, `[-]`, `[x]`, `[~]`) map to the four lifecycle states a task can be in: not started, in progress, completed, and queued for execution respectively.
+
+---
+
+#### `.kiro/specs/linkedin-style-application-flow/design.md` — Modified — April 6, 2026
+
+**Summary**
+
+The design document for the `linkedin-style-application-flow` spec was substantially expanded. The file previously contained only the document title, overview paragraph, and a truncated sentence ending mid-word (`"The design builds on the existing stack: Next.js 15, Prisma + "`). This edit completed that sentence and added the full technical design body, comprising:
+
+- A completed overview paragraph naming the full stack: Next.js 15, Prisma + PostgreSQL, NextAuth v5 JWT, Socket.io (`emitToUser` already wired), and Tailwind CSS dark theme.
+- A **Mermaid architecture flowchart** tracing the full data flow: applicant clicks Apply → `EasyApplyModal` → Cloudinary signature API → direct Cloudinary upload → Applications API → PostgreSQL; and recruiter clicks card → `ApplicationDetailPanel` → CV URL API → stage PATCH → Socket.io → applicant dashboard.
+- Three **key design decisions** callout block.
+- A **Components and Interfaces** section covering:
+  - 3 new API routes (`POST /api/upload/cv-signature`, `GET /api/upload/cv-url`, `PATCH /api/applications/[id]/notes`)
+  - 2 modified API routes (`POST /api/applications`, `PATCH /api/applications/[id]`)
+  - 2 new UI components with full TypeScript interfaces (`EasyApplyModal`, `ApplicationDetailPanel`)
+  - 4 modified UI components (`jobs/[id]/page.tsx`, `recruiter/dashboard/page.tsx`, `recruiter/jobs/new/page.tsx` + `edit/page.tsx`, `dashboard/page.tsx`)
+- A **Data Models** section with Prisma schema additions for `Application` (6 new optional fields: `applicantName`, `applicantEmail`, `applicantPhone`, `yearsOfExperience`, `coverLetter`, `cvPublicId`, `cvFileName`) and `JobPost` (`requiredFields String[] @default(["name","email"])`), plus Cloudinary integration config and signed upload/delivery URL shapes.
+- A **Socket.io Event Payload Update** extending `application:stage_changed` with a `jobTitle` field.
+- A **Correctness Properties** section defining 16 formal properties (P1–P16) covering round-trip persistence, field enforcement, modal rendering, form validation, CV validation, upload scoping, URL expiry, database storage format, Socket.io targeting, and dashboard state updates.
+- An **Error Handling** table covering 8 failure scenarios.
+- A **Testing Strategy** section with unit test cases and a property-based testing plan (16 properties, fast-check, 100 iterations each).
+
+**Reasoning**
+
+- The previous file state was a stub — the overview was cut off mid-sentence and no design content existed. This edit represents the first complete authoring pass on the design document, translating the requirements into a concrete technical blueprint.
+- The architecture flowchart was added to make the multi-step CV upload flow (browser → signature API → Cloudinary → applications API) immediately legible to any contributor, since this indirect upload pattern is non-obvious compared to a standard form POST.
+- The Components and Interfaces section was structured to map 1:1 with the requirements: each new API route and UI component directly satisfies one or more acceptance criteria, making traceability explicit.
+- The Data Models section was included at this stage (design, not tasks) because the Prisma schema changes are a prerequisite for all other implementation work — tasks cannot be sequenced correctly without knowing which fields exist.
+- The Correctness Properties section was added to formalise the spec's verifiable guarantees before implementation begins, following the property-based testing methodology established in the project's spec workflow. This ensures the test suite is designed alongside the architecture, not retrofitted after the fact.
+
+**Approach**
+
+- **Direct browser-to-Cloudinary upload via signed signature**: Rather than routing CV file bytes through the Next.js server (which would require `multipart/form-data` parsing, memory buffering, and a server-to-Cloudinary upload), the design uses Cloudinary's signed upload API. The server generates a short-lived signature; the browser uploads directly. This keeps API routes stateless and avoids the 4.5 MB Vercel request body limit.
+- **`public_id`-only storage in the database**: Storing only the Cloudinary `public_id` (e.g., `cvs/userId_jobId_timestamp`) rather than a full URL means delivery URLs can be regenerated at any time with any expiry, CDN prefix, or transformation. A full URL stored in the DB would become stale if the Cloudinary cloud name, CDN domain, or URL signing key changed.
+- **`requiredFields` array on `JobPost` as the single source of truth**: Both the `EasyApplyModal` field rendering and the `POST /api/applications` server-side validation read from the same `requiredFields` array on the job post. This eliminates the possibility of the client showing a field the server doesn't validate, or the server rejecting a field the client never showed.
+- **Extending the existing `application:stage_changed` Socket.io event** rather than introducing a new event type: The applicant dashboard already listens for this event (per the existing requirements). Adding `jobTitle` to the payload is a non-breaking additive change that enables the toast notification without requiring a new event subscription or connection handler.
+- **`ApplicationDetailPanel` as a slide-in panel rather than a modal**: A slide-in panel keeps the kanban board visible behind it, allowing the recruiter to reference other cards while reviewing an applicant. A full-screen modal would obscure the board context entirely.
+- **16 correctness properties covering the full feature surface**: Properties were derived directly from the acceptance criteria in the requirements document, with one property per distinct verifiable behaviour. This 1:1 mapping ensures no requirement is left without a machine-checkable guarantee, and makes it straightforward to identify which property test covers which requirement during code review.
+
+---
+
+#### `.kiro/specs/linkedin-style-application-flow/requirements.md` — Saved (no code changes) — April 5, 2026
+
+**Summary**
+
+The requirements document for the `linkedin-style-application-flow` spec was saved with no content changes. The diff was empty. The file currently contains the complete requirements specification for the LinkedIn-style Easy Apply feature, comprising:
+
+- An introduction paragraph describing the feature scope
+- A glossary of 14 defined terms (`Application_Form`, `Application_Submission`, `Applicant`, `Recruiter`, `Job_Post`, `Required_Fields`, `CV`, `Cloudinary_Storage`, `Cloudinary_Upload_URL`, `Kanban_Board`, `Stage`, `Stage_Update`, `Applicant_Dashboard`, `Application_Detail_Panel`)
+- 6 requirements with full acceptance criteria:
+  - Requirement 1: Recruiter Defines Required Application Fields (4 criteria)
+  - Requirement 2: Application Form Modal / Easy Apply (10 criteria)
+  - Requirement 3: CV File Storage via Cloudinary (5 criteria)
+  - Requirement 4: Recruiter Views Applicant Info and CV (4 criteria)
+  - Requirement 5: Drag-and-Drop Stage Updates with Real-Time Applicant Notification (6 criteria)
+  - Requirement 6: Applicant Dashboard Shows Real-Time Application Status (5 criteria)
+
+**Reasoning**
+
+- This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file.
+- The requirements document was previously authored in full (see the April 5, 2026 Modified entry below). This save event produced no diff — the file content is identical to its prior state.
+- Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+- One notable change from the previous version of this spec: the storage backend was updated from Cloudflare R2 (referenced in the prior Modified entry) to Cloudinary. The glossary now defines `Cloudinary_Storage` and `Cloudinary_Upload_URL` instead of `R2_Storage` and `Presigned_URL`, and Requirement 3 now specifies Cloudinary as the sole storage backend with signed upload/delivery URLs rather than R2 presigned PUT/GET URLs.
+
+---
+
+#### `.kiro/specs/linkedin-style-application-flow/requirements.md` — Modified — April 5, 2026
+
+**Summary**
+
+The requirements document for the `linkedin-style-application-flow` spec was substantially expanded. The file previously contained only the document header, introduction paragraph, and a single incomplete glossary entry (`Application_Form`). This edit completed the glossary with 13 defined terms and added the full requirements body comprising six requirements with detailed acceptance criteria.
+
+**Glossary terms added**
+
+The following terms were defined:
+
+- `Application_Form` — completed from the truncated previous state
+- `Application_Submission`, `Applicant`, `Recruiter`, `Job_Post`, `Required_Fields`, `CV`, `R2_Storage`, `Presigned_URL`, `Kanban_Board`, `Stage`, `Stage_Update`, `Applicant_Dashboard`, `Application_Detail_Panel`
+
+**Requirements added**
+
+| # | Title | Acceptance Criteria |
+|---|-------|-------------------|
+| 1 | Recruiter Defines Required Application Fields | 4 criteria covering `requiredFields` config on Job_Post, checklist UI, persistence, and mandatory name/email enforcement |
+| 2 | Application Form Modal (Easy Apply) | 10 criteria covering modal rendering, field pre-population, client-side validation, CV file validation (PDF/DOC/DOCX, ≤5 MB), presigned-URL upload flow, duplicate-application guard, and loading state |
+| 3 | CV File Storage via Cloudflare R2 | 5 criteria covering R2 as sole storage backend, presigned PUT URL (15 min expiry), presigned GET URL (60 min expiry), storing only the object key (not full URL), and error handling |
+| 4 | Recruiter Views Applicant Info and CV | 4 criteria covering the Application_Detail_Panel, on-demand CV presigned GET URL, recruiter notes display, and notes persistence |
+| 5 | Drag-and-Drop Stage Updates with Real-Time Applicant Notification | 6 criteria covering optimistic UI, API persistence, revert-on-failure, Socket.io Stage_Update emission, real-time dashboard update, and toast notification |
+| 6 | Applicant Dashboard Shows Real-Time Application Status | 5 criteria covering application list display, Socket.io connection scoping, live stage update on event, disconnection indicator, and re-fetch on reconnect |
+
+**Reasoning**
+
+- The previous file state was a stub — the glossary was cut off mid-entry and no requirements existed. This edit represents the first substantive authoring pass on the spec, establishing the full scope of the LinkedIn-style Easy Apply feature.
+- The introduction had already described the high-level intent (structured application form, CV upload to R2, recruiter kanban with detail panel, real-time stage updates via Socket.io). The requirements added here formalise that intent into verifiable acceptance criteria.
+- Requirement 1 and 2 together define the applicant-facing "Easy Apply" flow end-to-end: the recruiter configures which fields matter per job, and the applicant sees only those fields in the modal.
+- Requirement 3 isolates R2 storage concerns into a dedicated requirement rather than embedding them in Requirement 2, keeping each requirement single-responsibility and independently testable.
+- Requirement 4 closes the recruiter-side loop: after applicants submit, recruiters need a way to view the structured data and CV from the kanban board without leaving the pipeline view.
+- Requirements 5 and 6 together specify the real-time feedback loop: the recruiter's drag action on the kanban board triggers a Socket.io event that the applicant's dashboard consumes immediately, eliminating the need for polling.
+
+**Approach**
+
+- **Presigned URLs over server-proxied uploads**: CV files are uploaded directly from the browser to R2 using presigned PUT URLs rather than routing the binary through the Next.js server. This avoids memory pressure and request timeout issues on the server for large files, and is the standard pattern for client-to-object-storage uploads.
+- **Object key storage (not full URL)**: Only the R2 object key is persisted in the database. Full URLs are generated on demand. This means URL expiry, bucket region changes, or CDN configuration changes never require a database migration.
+- **Socket.io for real-time stage updates**: The project already uses Socket.io (evidenced by `src/lib/socketio.ts` and the `emitToUser` utility). Reusing the existing infrastructure for Stage_Update events avoids introducing a second real-time transport (e.g., SSE or polling) and keeps the real-time layer consistent.
+- **Optimistic UI with server revert**: The kanban drag-and-drop updates the UI immediately before the API call resolves, matching the existing pattern already implemented in `src/app/recruiter/dashboard/page.tsx`. On failure, the board reverts to server state via a re-fetch, ensuring consistency without sacrificing perceived performance.
+- **`requiredFields` as a per-job-post configuration**: Rather than a global application form, each job post carries its own field requirements. This mirrors LinkedIn's "Easy Apply" model where different roles legitimately need different information (e.g., a design role needs a portfolio link; a sales role needs years of experience).
+
+---
+
+#### `src/app/api/jobs/[id]/route.ts` — Saved (no code changes) — April 5, 2026
+
+**Summary**
+
+The file `src/app/api/jobs/[id]/route.ts` was saved with no content changes. The diff was empty. The file implements three HTTP handlers for the `/api/jobs/[id]` route:
+
+- **`GET /api/jobs/[id]`**: Returns a single job post by ID with full details including recruiter info (`id`, `name`, `companyName`, `responseRate`, `avgResponseTimeHours`, `recruiterVerified`). Returns `404` if the job does not exist.
+- **`PATCH /api/jobs/[id]`**: Allows the owning recruiter to partially update a job post's fields (`title`, `description`, `skills`, `location`, `city`, `salaryMin`, `salaryMax`, `experienceLevel`, `jobType`, `category`). Enforces authentication (`401`), role check (`RECRUITER` only, `403`), ownership check (`403`), and per-field validation (enum checks for `experienceLevel`/`jobType`, non-empty array for `skills`, numeric range validation for salary, `salaryMin <= salaryMax`). Only fields present in the request body are updated (partial update pattern).
+- **`DELETE /api/jobs/[id]`**: Soft-deletes a job post by setting `isClosed = true` and `isActive = false`. After the soft-delete, broadcasts an updated active job count to all Socket.IO clients via `broadcast("jobs:count_updated", { activeCount })`.
+
+**Reasoning**
+
+- This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file.
+- No logic, types, imports, or comments were added, removed, or modified in this save event.
+- Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
+#### `.vscode/settings.json` — Saved (no code changes) — April 5, 2026
+
+**Summary**
+
+The file `.vscode/settings.json` was saved with no content changes. The diff was empty. The file currently contains only an empty JSON object:
+
+```json
+{
+}
+```
+
+**Reasoning**
+
+- This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file.
+- The file has no active settings configured — it is an empty JSON object, meaning all VS Code behaviour for this workspace falls back to user-level or default settings.
+- Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
+#### `src/lib/auth.config.ts` — Created — April 4, 2026
+
+**Summary**
+
+Exports a `NextAuthConfig` object named `authConfig` with the following configuration:
+
+- **Provider**: LinkedIn OAuth, configured via `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` environment variables.
+- **Session strategy**: JWT (JSON Web Token) — stateless sessions, no database session storage required.
+- **JWT callback**: Extracts `id` and `role` from the user object on sign-in and stores them in the token.
+- **Session callback**: Maps `token.id` and `token.role` onto `session.user` so they are accessible client-side.
+- **Custom sign-in page**: Unauthenticated users are redirected to `/login` instead of the default NextAuth page.
+- **Secret**: Token signing/encryption uses the `NEXTAUTH_SECRET` environment variable.
+
+**Reasoning**
+
+- Separating auth config into `auth.config.ts` (rather than `auth.ts`) is a Next.js / NextAuth v5 best practice. It allows the config to be imported in Edge-compatible files like `middleware.ts` without pulling in Node.js-only dependencies (e.g., a Prisma adapter).
+- JWT strategy is preferred over database sessions to avoid extra DB round-trips on every request, keeping the deployment stateless and scalable.
+- LinkedIn is the sole provider because the platform targets professionals, and LinkedIn OAuth provides verified professional identity.
+- Embedding `role` in the JWT avoids a DB lookup on every authenticated request — the role is stamped into the token at sign-in time.
+- The custom `/login` page gives full control over sign-in UI/UX rather than relying on NextAuth's default page.
+
+#### `.vscode/settings.json` — Modified — April 4, 2026
+
+**Summary**
+
+Added the `"typescript.autoClosingTags": false` setting to the VS Code workspace configuration.
+
+**Change**
+
+```json
+{
+    "typescript.autoClosingTags": false
+}
+```
+
+**Reasoning**
+
+- `typescript.autoClosingTags` controls whether VS Code automatically inserts a closing tag when you type `>` or `/` in JSX/TSX files.
+- Setting this to `false` disables the auto-close behaviour, giving developers full manual control over tag insertion.
+- This is typically done to prevent unwanted tag duplication when working in JSX/TSX files — VS Code's auto-close can conflict with other editor extensions (e.g., Auto Rename Tag, Emmet) or personal typing habits, resulting in doubled closing tags.
+- Disabling it at the workspace level ensures consistent behaviour for all contributors regardless of their personal VS Code settings.
+
+#### `scripts/seed-admin.ts` — Modified — April 4, 2026
+
+**Summary**
+
+A database seeding script that creates a default admin user in the application's PostgreSQL database via Prisma. It performs the following steps:
+
+1. Connects to the database using `PrismaClient`.
+2. Checks whether a user with the email `admin@paktechjobs.com` already exists — exits early if so (idempotent).
+3. Hashes the default password `Admin@123456` using `bcryptjs` with a salt round of 12.
+4. Creates a new `User` record with `role: Role.ADMIN`, the hashed password, and the name `"Admin"`.
+5. Logs the created admin's email and plain-text password to the console for initial setup reference.
+6. Disconnects Prisma on completion or error.
+
+**Key details**
+
+- Email: `admin@paktechjobs.com`
+- Default password: `Admin@123456` (hashed with bcrypt, cost factor 12)
+- Role: `ADMIN` (from Prisma-generated `Role` enum)
+- Idempotency guard: script is safe to run multiple times — it will not create duplicate admins.
+
+**Reasoning**
+
+- A seed script is the standard approach for bootstrapping a required system user (admin) without manually inserting rows into the database. It keeps the setup process reproducible and version-controlled.
+- The idempotency check (`findUnique` before `create`) ensures the script can be re-run during development or CI without side effects.
+- `bcryptjs` is used (rather than the native `bcrypt` package) because it is a pure-JavaScript implementation with no native bindings, making it easier to run in environments where native compilation is unavailable (e.g., CI pipelines, Windows dev machines).
+- A cost factor of 12 is a widely accepted balance between security (resistance to brute-force) and performance for password hashing.
+- The plain-text password is only logged to the console during the seed run — it is never stored in the database, only the hash is persisted.
+- Separating this into `scripts/` (rather than an API route or migration) keeps seeding concerns out of the application runtime and makes it easy to invoke via `ts-node` or `npx tsx`.
+
+#### `src/app/api/admin/recruiters/[id]/route.ts` — Modified — April 4, 2026
+
+**Summary**
+
+Implements the `PATCH /api/admin/recruiters/[id]` endpoint, which allows an admin to approve or reject a recruiter's account. The handler performs the following steps:
+
+1. Resolves the dynamic `[id]` param from the route.
+2. Authenticates the request via `auth()` — returns `401 Unauthorized` if no session exists.
+3. Authorises the request — returns `403 Forbidden` if the caller is not an `ADMIN`.
+4. Parses and validates the JSON request body, expecting `{ action: "approve" | "reject", reason?: string }`.
+5. Validates that `action` is either `"approve"` or `"reject"` — returns `400` otherwise.
+6. Validates that `reason` is a non-empty string when `action === "reject"` — returns `400` otherwise.
+7. Fetches the target user from the database; returns `404` if not found or if the user is not a `RECRUITER`.
+8. **Approve path** (Requirement 12.3):
+   - Runs a Prisma transaction that sets `recruiterVerified = true` on the user and creates a `RECRUITER_APPROVED` notification.
+   - Emits a real-time `notification:new` event to the recruiter via Socket.IO (`emitToUser`).
+   - Logs a reminder to send the "Verified Company" badge email.
+   - Returns the updated user object.
+9. **Reject path** (Requirement 12.4):
+   - Runs a Prisma transaction that creates a `RECRUITER_REJECTED` notification containing the trimmed rejection reason.
+   - Emits a real-time `notification:new` event to the recruiter via Socket.IO.
+   - Logs a reminder to send the rejection email with the reason.
+   - Returns `{ message: "Recruiter rejected" }`.
+
+**Key implementation details**
+
+- Both approve and reject paths use `prisma.$transaction` to ensure the DB write and notification creation are atomic — if either fails, neither is committed.
+- Real-time delivery is handled by `emitToUser` (Socket.IO), so the recruiter sees the decision immediately without polling.
+- The `recruiterVerified` flag is only set on approval; rejection does not alter the flag, leaving the account in a pending/rejected state.
+- Email sending is not implemented inline — console log reminders act as placeholders for an email service integration.
+
+**Reasoning**
+
+- Scoping this endpoint to `ADMIN` role only (checked server-side) prevents any recruiter or job-seeker from self-approving their account.
+- Using a Prisma transaction for the approve path ensures `recruiterVerified` and the notification are always in sync — a partial update (e.g., user updated but notification not created) is impossible.
+- Requiring a non-empty `reason` on rejection enforces accountability and gives the recruiter actionable feedback, satisfying Requirement 12.4.
+- Emitting a Socket.IO event in addition to persisting the notification provides instant feedback to the recruiter's active session, improving UX without requiring a page refresh.
+- Separating approve and reject into distinct code paths (rather than a single generic update) keeps the logic explicit and easy to extend independently (e.g., adding email sending to one path without affecting the other).
+- The `console.log` placeholders for email sending follow the existing pattern in the codebase and make it straightforward to swap in a real email provider (e.g., SendGrid, Resend) later.
+
+#### `src/lib/socketio.ts` — Modified — April 4, 2026
+
+**Summary**
+
+A lightweight Socket.IO singleton utility that provides a shared reference to the Socket.IO server instance across the application. It exports four functions:
+
+- **`setSocketIO(instance)`** — Stores the Socket.IO server instance in a module-level variable (`io`). Called once during server bootstrap (in `server.ts`) after the Socket.IO server is initialised.
+- **`getSocketIO()`** — Returns the current Socket.IO instance, or `null` if it has not been set yet.
+- **`emitToUser(userId, event, data)`** — Emits a named event with a payload to a specific user's private room (`user:<userId>`). No-ops silently if `io` is not yet initialised.
+- **`broadcast(event, data)`** — Emits a named event with a payload to all connected Socket.IO clients. No-ops silently if `io` is not yet initialised.
+
+**Key implementation details**
+
+- The module-level `io` variable acts as a process-scoped singleton — there is only ever one Socket.IO instance per Node.js process.
+- All parameters and the `io` variable are typed as `any` (with an `eslint-disable` comment) to avoid coupling this utility to a specific Socket.IO version's type definitions.
+- Both `emitToUser` and `broadcast` guard against a `null` `io` with an early return, making them safe to call before the server is fully initialised (e.g., during module load order edge cases).
+- User-specific rooms follow the convention `user:<userId>`, which must match the room-join logic in the Socket.IO connection handler (where each authenticated client joins their own `user:<id>` room on connect).
+
+**Reasoning**
+
+- A singleton pattern is necessary because Next.js (and Node.js in general) does not provide a built-in way to share stateful server objects (like a Socket.IO instance) across API route modules. Without a shared reference, each module would have no way to emit events.
+- Separating Socket.IO access into a dedicated utility (`socketio.ts`) rather than importing the instance directly keeps the coupling explicit and testable — any module that needs to emit events imports from this file, making it easy to mock in tests.
+- The `user:<userId>` room convention decouples the emitter from knowing which socket connections belong to a user — the Socket.IO server handles the room membership, and callers only need to know the user's ID.
+- Using `any` types (rather than importing `Server` from `socket.io`) avoids adding `socket.io` as a required type dependency in files that only need to emit events, and prevents version-mismatch type errors if the Socket.IO package is updated.
+- Silent no-ops on uninitialised `io` are intentional — during SSR or build-time execution, the Socket.IO server does not exist, and throwing an error in those cases would break the build or server startup.
+
+#### `src/app/recruiter/dashboard/page.tsx` — Saved (no code changes) — April 4, 2026
+
+**Summary**
+
+This file implements the recruiter's application pipeline dashboard as a client-side React page (`"use client"`). It renders a Kanban board where recruiters can manage job applications across five active pipeline stages. The file was saved without any code modifications — the diff was empty.
+
+**Architecture overview**
+
+The page is composed of the following components and concerns:
+
+- **Types**: `PipelineStage` union (`APPLIED | SEEN | SHORTLISTED | INTERVIEW | OFFER | REJECTED | EXPIRED`), `RejectionReason` union (5 structured reasons), and `Application` interface describing the shape of data returned by `GET /api/applications`.
+- **Constants**: `KANBAN_STAGES` (the 5 active board columns), `STAGE_LABEL`, `STAGE_COLORS`, `STAGE_HEADER_COLORS` (Tailwind class maps per stage), `REJECTION_REASON_LABELS`, and `NEXT_STAGE` (a partial map defining the only valid forward transition per stage).
+- **`timeAgo(dateStr)`**: Utility that converts an ISO date string to a human-readable relative time string (e.g., "3h ago").
+- **`RejectionModal`**: A full-screen modal overlay that collects a structured `RejectionReason` (via `<select>`) and optional free-text notes before confirming a rejection. Rendered for both single and bulk rejection flows.
+- **`ApplicationCard`**: A draggable card displaying applicant name, job title, experience level, up to 3 skills (with overflow count), and submission time. Includes a checkbox for multi-select. Visual state changes on selection (emerald border/background).
+- **`KanbanColumn`**: A drop target column for a single pipeline stage. Renders a colour-coded header with a count badge and a scrollable list of `ApplicationCard` components. Highlights with an emerald ring when a card is dragged over it.
+- **`RecruiterDashboardPage`** (default export): The root page component managing all state and side effects:
+  - Fetches applications from `GET /api/applications` on mount via `useCallback`-memoised `fetchApplications`.
+  - Groups applications into columns using `KANBAN_STAGES.reduce`.
+  - **Drag-to-advance**: HTML5 drag events move a single card to the next stage in sequence only (enforced by `NEXT_STAGE` map). Uses optimistic UI update with revert-on-failure.
+  - **Bulk advance**: Advances all selected applications one stage forward. Requires all selected apps to share the same current stage (validated client-side with an `alert`). Calls `POST /api/applications/bulk` with `action: "advance"`.
+  - **Rejection flow**: Dragging a card to the "Drop to Reject" zone (a dashed red drop target appended after the columns) opens `RejectionModal` in `single` mode. Clicking "Reject selected" in the bulk action bar opens it in `bulk` mode. On confirm, calls `PATCH /api/applications/:id/reject` (single) or `POST /api/applications/bulk` with `action: "reject"` (bulk). Both paths include `rejectionReason` and optional `recruiterNotes`.
+  - **Bulk action bar**: Conditionally rendered in the header when `selectedIds.size > 0`. Shows selected count, "Advance selected", "Reject selected", and "Clear" buttons.
+
+**API endpoints consumed**
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/applications` | Fetch all applications for the recruiter |
+| `PATCH` | `/api/applications/:id` | Advance a single application to the next stage |
+| `PATCH` | `/api/applications/:id/reject` | Reject a single application with reason + notes |
+| `POST` | `/api/applications/bulk` | Bulk advance or bulk reject multiple applications |
+
+**Known linter warnings (active)**
+
+Three instances of the Tailwind CSS warning: `flex-shrink-0` should be written as `shrink-0` (Tailwind v3+ shorthand). These appear on:
+1. The checkbox `<input>` inside `ApplicationCard`.
+2. The `KanbanColumn` wrapper `<div>`.
+3. The "Drop to Reject" zone `<div>`.
+
+These are non-breaking warnings and do not affect runtime behaviour. They can be resolved by replacing `flex-shrink-0` with `shrink-0` in those three locations.
+
+**Reasoning for current design decisions**
+
+- **Optimistic UI with revert**: Stage transitions update local state immediately before the API call completes, giving the recruiter instant visual feedback. If the API call fails, `fetchApplications()` is called to re-sync state from the server, ensuring consistency without leaving the UI in a stale state.
+- **`NEXT_STAGE` enforcement on drag**: Restricting drag-and-drop to only the immediately next stage prevents accidental skipping of pipeline steps (e.g., jumping from `APPLIED` directly to `OFFER`). This enforces a deliberate, sequential review process.
+- **Structured rejection reasons**: Using a fixed enum (`RejectionReason`) rather than free-text for the primary reason ensures consistent data for analytics and reporting. Optional notes allow nuance without sacrificing structure.
+- **`useCallback` on `fetchApplications`**: Memoising the fetch function prevents it from being recreated on every render, which would cause the `useEffect` to re-run unnecessarily. It also allows the function to be safely called from event handlers (drag revert, bulk revert) without stale closure issues.
+- **Separate "Drop to Reject" zone**: Placing rejection outside the main Kanban columns (as a distinct dashed drop target) makes it visually distinct and harder to trigger accidentally, reducing the risk of unintentional rejections during normal pipeline advancement.
+- **Bulk action bar in header**: Showing bulk controls only when items are selected keeps the UI clean during normal single-card interactions and draws attention to the active selection state.
+- **`Set<string>` for `selectedIds`**: Using a `Set` for selection state provides O(1) lookup for `has()` checks during rendering of each card, which is important for performance when there are many applications.
+
+#### `.vscode/settings.json` — Modified — April 4, 2026 (update)
+
+**Summary**
+
+Added `"typescript.autoClosingTags": false` to the VS Code workspace settings file.
+
+**Change diff**
+
+```json
+// Before
+{}
+
+// After
+{
+    "typescript.autoClosingTags": false
+}
+```
+
+**What this setting does**
+
+`typescript.autoClosingTags` is a VS Code setting (provided by the built-in TypeScript/JavaScript language extension) that controls whether the editor automatically inserts a matching closing tag when you type `>` or `/` at the end of an opening JSX/TSX tag.
+
+- `true` (default): VS Code auto-inserts `</TagName>` immediately after you close an opening tag.
+- `false`: Auto-insertion is disabled; the developer must type closing tags manually.
+
+**Reasoning**
+
+- **Conflict with other extensions**: Auto-closing tags can conflict with extensions like *Auto Rename Tag*, *Emmet*, or *Prettier* that also manipulate tag pairs. When multiple tools try to insert or rename closing tags simultaneously, the result is often duplicated or malformed tags (e.g., `</div></div>`).
+- **JSX/TSX-heavy codebase**: This project is a Next.js application with a large number of TSX files (see `src/app/admin/page.tsx`, `src/app/recruiter/dashboard/page.tsx`, etc.). In JSX, self-closing tags (`<Component />`) are common, and auto-close behaviour can insert an unwanted `</Component>` after a self-closing slash.
+- **Workspace-level scope**: Placing this in `.vscode/settings.json` (workspace settings) rather than a personal `settings.json` ensures the behaviour is consistent for all contributors cloning the repository, regardless of their individual VS Code configuration.
+- **Non-breaking change**: This is a pure editor ergonomics setting with no effect on the compiled output, runtime behaviour, TypeScript type-checking, or ESLint rules.
+
+#### `.vscode/settings.json` — Saved (no code changes) — April 4, 2026
+
+**Summary**
+
+The file was saved but the diff was empty — no content was added, removed, or modified. The file still contains only an empty JSON object `{}`.
+
+**Current state of the file**
+
+```json
+{
+}
+```
+
+**Reasoning**
+
+- This save event was likely triggered by the editor (e.g., auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made.
+- No settings were added or removed in this save. The previous meaningful change to this file (adding `"typescript.autoClosingTags": false`) was reverted or was never committed — the file is currently empty.
+- Logging this event for completeness and traceability, as the documentation policy requires recording all save/edit events regardless of whether content changed.
+- If `"typescript.autoClosingTags": false` was intentionally removed, the auto-closing tag behaviour in VS Code will revert to the default (`true`), meaning the editor will once again auto-insert closing JSX/TSX tags on `>` or `/`.
