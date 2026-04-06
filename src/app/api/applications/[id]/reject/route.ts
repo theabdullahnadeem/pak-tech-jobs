@@ -31,8 +31,9 @@ const VALID_REJECTION_REASONS = Object.values(RejectionReason);
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -44,7 +45,7 @@ export async function PATCH(
   }
 
   const application = await prisma.application.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true,
       stage: true,
@@ -113,7 +114,7 @@ export async function PATCH(
 
   const updatedApplication = await prisma.$transaction(async (tx) => {
     const updated = await tx.application.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         stage: "REJECTED",
         rejectionReason: reason,
@@ -131,7 +132,7 @@ export async function PATCH(
         title: "Application Update",
         body: notificationBody,
         data: {
-          applicationId: params.id,
+          applicationId: id,
           jobPostId: application.jobPost.id,
           rejectionReason: reason,
           ...(notes !== undefined && { recruiterNotes: notes }),
@@ -147,7 +148,7 @@ export async function PATCH(
 
   // Requirement 7.2, 13.1: emit real-time events to the applicant (non-blocking)
   emitToUser(application.applicantId, "application:stage_changed", {
-    applicationId: params.id,
+    applicationId: id,
     newStage: "REJECTED",
   });
   emitToUser(application.applicantId, "notification:new", updatedApplication.notification);
