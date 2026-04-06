@@ -12,7 +12,7 @@ FROM base AS build
 RUN apk add --no-cache python3 make g++
 
 COPY package-lock.json package.json ./
-RUN npm ci --include=dev
+RUN npm install --include=dev --legacy-peer-deps
 
 COPY . .
 
