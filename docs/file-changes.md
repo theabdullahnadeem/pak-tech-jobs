@@ -17,6 +17,62 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `package.json` — Modified — April 7, 2026
+
+**Summary**
+
+The `package.json` dependency manifest was updated to add `preact` as a runtime dependency. The `"dependencies"` section now includes:
+
+```json
+"preact": "^10.25.4"
+```
+
+All other fields — `name`, `version`, `private`, `scripts`, `dependencies`, and `devDependencies` — remain unchanged.
+
+**Change**
+
+```diff
+   "socket.io-client": "^4.8.3"
++  "preact": "^10.25.4"
+ },
+```
+
+**Reasoning**
+
+Preact is a lightweight 3 KB alternative to React that shares the same modern API (`hooks`, `jsx`, `context`). Adding it to the project enables performance-sensitive UI paths to opt into Preact's smaller runtime without rewriting component logic. In a Next.js project, Preact can be aliased to replace React in production builds via `next.config.ts` webpack aliases, reducing the client-side JavaScript bundle size — particularly valuable for pages that are heavily server-rendered and only need minimal client-side interactivity.
+
+The `^10.25.4` version range pins to the Preact 10.x line, which is the stable, hooks-compatible release series and the one that supports the `preact/compat` compatibility layer used for React aliasing.
+
+**Approach**
+
+- **`preact` in `dependencies` (not `devDependencies`)**: Preact is a runtime library — its code ships to the browser. Placing it in `devDependencies` would cause it to be excluded from production installs, breaking any component that imports from `preact` or any webpack alias that resolves `react` → `preact/compat` at runtime.
+- **`^10.25.4` semver range**: The caret range allows patch and minor updates within the 10.x line, picking up bug fixes and performance improvements automatically while preventing a breaking major-version upgrade. Preact 10.x has a stable, well-tested API surface; locking to an exact version would require manual bumps for every patch release.
+- **Preact over other React alternatives (e.g., Inferno, Solid)**: Preact's `preact/compat` layer provides near-complete React API compatibility, meaning existing components written against React's API work without modification. Inferno and Solid require component rewrites. This makes Preact the lowest-friction option for incrementally optimising bundle size in an existing React codebase.
+
+---
+
+#### `package.json` — Saved (no code changes) — April 7, 2026
+
+**Summary**
+
+The file `package.json` was saved with no content changes. The diff was empty. The file defines the project's npm package manifest for the Next.js application (`"name": "tool-site"`, `"version": "0.1.0"`). Its current structure:
+
+- **`scripts`**: `dev` (Next.js dev server), `dev:server` (custom `server.ts` via `tsx`), `build`, `start`, `lint` (ESLint), `test` (Vitest in run mode).
+- **`dependencies`** (runtime): `@google/genai`, `@google/generative-ai`, `@gsap/react`, `@socket.io/redis-adapter`, `@types/bcryptjs`, `bcryptjs`, `cloudinary`, `gsap`, `ioredis`, `next@16.1.6`, `next-auth@5.0.0-beta.30`, `react@19.2.3`, `react-dom@19.2.3`, `recharts`, `socket.io`, `socket.io-client`.
+- **`devDependencies`**: `@prisma/client`, `@tailwindcss/postcss`, `@types/node`, `@types/react`, `@types/react-dom`, `@vitest/coverage-v8`, `dotenv`, `eslint`, `eslint-config-next`, `fast-check`, `prisma`, `tailwindcss`, `tsx`, `typescript`, `vitest`.
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+The current `package.json` reflects the full dependency set assembled across the project's development lifecycle:
+- `cloudinary` was added when the CV storage backend was migrated from Cloudflare R2 to Cloudinary (see the `linkedin-style-application-flow` spec).
+- `fast-check` was added to support property-based testing as specified in the spec workflow.
+- `socket.io` and `@socket.io/redis-adapter` with `ioredis` form the real-time infrastructure for stage-change notifications.
+- `next@16.1.6` pins a specific Next.js version to ensure reproducible builds across all environments.
+
+---
+
 #### `src/lib/redis.ts` — Saved (no code changes) — April 6, 2026
 
 **Summary**
