@@ -17,6 +17,124 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/lib/auth.ts` — Modified — April 7, 2026
+
+**Summary**
+
+The NextAuth configuration in `src/lib/auth.ts` was updated with a single addition: the `trustHost: true` option was added as the first property of the `NextAuth({...})` configuration object, immediately before the `providers` array.
+
+The file exports the NextAuth handlers (`handlers`, `auth`, `signIn`, `signOut`) and configures:
+- Two providers: `Credentials` (email/password via bcrypt + Prisma) and `LinkedIn` OAuth
+- JWT session strategy
+- `jwt` and `session` callbacks that stamp `id` and `role` onto the token and session
+- Custom sign-in page at `/login`
+- `NEXTAUTH_SECRET` for token signing
+
+The only change in this edit is the addition of `trustHost: true` at the top of the config object.
+
+**Change**
+
+```diff
+ export const { handlers, auth, signIn, signOut } = NextAuth({
++  trustHost: true,
+   providers: [
+```
+
+**Reasoning**
+
+NextAuth v5 (beta) introduced a host verification check that validates the `Host` header of incoming requests against a list of trusted origins. In production deployments where the application sits behind a reverse proxy or load balancer — such as Fly.io (the deployment target for this project, as configured in `fly.toml`) — the `Host` header seen by the Next.js server is the internal hostname (e.g., `fly-local-6pn` or `0.0.0.0:3000`) rather than the public domain (`paktechjobs.com`). NextAuth v5 rejects these requests with an `UntrustedHost` error because the internal hostname does not match `NEXTAUTH_URL`.
+
+Setting `trustHost: true` instructs NextAuth to skip this host verification check entirely, accepting requests regardless of the `Host` header value. This is the correct and documented fix for reverse-proxy deployments where the public URL and the internal server hostname differ.
+
+Without this option, all authentication flows — credential login, LinkedIn OAuth callbacks, session reads — fail in production on Fly.io with an `UntrustedHost` error, making the application completely unusable for authenticated users.
+
+**Approach**
+
+- **`trustHost: true` over adding `NEXTAUTH_URL` variants or `AUTH_TRUST_HOST` env var**: NextAuth v5 supports both `trustHost: true` in the config object and the `AUTH_TRUST_HOST=true` environment variable as equivalent mechanisms. The config-object approach was chosen here because it is explicit and version-controlled — the intent is visible in the source code without needing to inspect environment variable configuration across multiple deployment environments (local `.env`, Fly.io secrets, CI). An env var approach would require setting `AUTH_TRUST_HOST=true` in every deployment environment separately, creating a hidden dependency that is easy to miss when onboarding new environments.
+- **Placement as the first property in the config object**: `trustHost` is placed before `providers` to make it immediately visible at the top of the config. Since it affects the fundamental request-acceptance behaviour of NextAuth, placing it prominently signals its importance to future readers rather than burying it after dozens of lines of provider and callback configuration.
+- **`trustHost: true` over configuring `NEXTAUTH_URL` to match the internal hostname**: Setting `NEXTAUTH_URL` to the internal Fly.io hostname would break OAuth redirect URIs (LinkedIn OAuth requires the redirect URI to match the registered public domain `paktechjobs.com`). `trustHost: true` sidesteps the host check without touching the URL configuration, keeping OAuth callbacks functional.
+- **Applicable to Fly.io reverse-proxy architecture**: The `fly.toml` configures `force_https = true` and `internal_port = 3000`, confirming that Fly.io terminates TLS and proxies to the Node.js server on port 3000. In this architecture, the `Host` header reaching Next.js is always the internal address, making `trustHost: true` a structural requirement rather than a workaround.
+
+---
+
+#### `src/lib/redis.ts` — Modified — April 7, 2026
+
+**Summary**
+
+The Redis client module `src/lib/redis.ts` was refactored from an eager singleton pattern to a lazy-initialisation proxy pattern. The previous implementation evaluated `process.env.REDIS_URL` at module import time, threw immediately if the variable was absent, and stored the `ioredis` instance on `globalThis` to survive Next.js hot-module replacement. The new implementation defers all of that work until the first actual Redis operation is performed.
+
+Key structural changes:
+
+- The module-level `redis` export is now a `Proxy` object wrapping an empty object. Any property access on `redis` (e.g., `redis.get(...)`, `redis.set(...)`) triggers the `get` trap, which calls `getRedis()` to lazily initialise the real `ioredis` instance on first use.
+- A private `_redis: Redis | null` variable replaces the `globalThis` singleton. `getRedis()` checks `_redis` first; if null, it reads `REDIS_URL`, constructs the `ioredis` client, stores it in `_redis`, and returns it.
+- The `createRedisClient()` factory function (used by the Socket.io Redis adapter) was updated to read `REDIS_URL` locally and validate it, removing the reliance on the module-level `redisUrl` variable that no longer exists.
+- The `globalThis` pattern and the `globalForRedis` variable were removed entirely.
+
+**Change**
+
+```diff
+-const redisUrl = process.env.REDIS_URL;
+-
+-if (!redisUrl) {
+-  throw new Error("REDIS_URL environment variable is not set");
+-}
+-
+-// Singleton pattern — reuse connection across hot reloads in dev
+-const globalForRedis = globalThis as unknown as { redis?: Redis };
+-
+-export const redis = globalForRedis.redis ?? new Redis(redisUrl, {
+-  maxRetriesPerRequest: 3,
+-  lazyConnect: false,
+-  tls: redisUrl.startsWith("rediss://") ? {} : undefined,
+-});
+-
+-if (process.env.NODE_ENV !== "production") {
+-  globalForRedis.redis = redis;
+-}
++// Lazy singleton — only connect when actually used, not at import time
++let _redis: Redis | null = null;
++
++function getRedis(): Redis {
++  if (_redis) return _redis;
++
++  const redisUrl = process.env.REDIS_URL;
++  if (!redisUrl) {
++    throw new Error("REDIS_URL environment variable is not set");
++  }
++
++  _redis = new Redis(redisUrl, {
++    maxRetriesPerRequest: 3,
++    lazyConnect: false,
++    tls: redisUrl.startsWith("rediss://") ? {} : undefined,
++  });
++
++  return _redis;
++}
++
++// Proxy object — accessing any property triggers lazy init
++export const redis = new Proxy({} as Redis, {
++  get(_target, prop) {
++    return (getRedis() as unknown as Record<string | symbol, unknown>)[prop];
++  },
++});
+```
+
+**Reasoning**
+
+The previous eager-initialisation approach caused a problem in environments where `REDIS_URL` is not available at module load time — specifically during Next.js build steps, static generation, and certain test setups. When Next.js imports a module during the build phase, any module-level code that throws (such as the `if (!redisUrl) throw` guard) aborts the build entirely, even if the Redis client would never actually be used during static rendering. The lazy pattern defers the environment variable check and connection creation to the moment a Redis command is first issued, which only happens at request time — never during the build phase.
+
+The `globalThis` singleton pattern was also removed because it was solving a problem (connection reuse across hot reloads) that the new `_redis` module-level variable already solves. In Node.js, module-level variables persist for the lifetime of the process. In Next.js development mode, hot-module replacement re-evaluates modules, but the `_redis` variable being `null`-checked means a new connection is only created if the previous one was garbage-collected — which is the correct behaviour. The `globalThis` approach was a workaround for the same issue but added indirection and a type cast (`globalThis as unknown as { redis?: Redis }`) that obscured intent.
+
+**Approach**
+
+- **`Proxy` object for transparent lazy initialisation**: The `redis` export must remain a stable reference that callers can import once and use anywhere (e.g., `import { redis } from "@/lib/redis"`). If `redis` were a function (`getRedis()`), every call site would need to change to `getRedis().get(...)`. The `Proxy` approach preserves the existing call-site API — `redis.get(...)`, `redis.set(...)`, `redis.del(...)` — while deferring the actual `ioredis` instance creation. The `get` trap intercepts every property access and delegates to the real instance, which is initialised on first access.
+- **`_redis: Redis | null` module variable over `globalThis`**: A plain module-level variable is simpler, more readable, and avoids the `globalThis as unknown as { redis?: Redis }` type cast. In production (where hot reloads don't occur), both approaches are equivalent. In development, the `_redis` variable is re-initialised on the first Redis call after a hot reload, which is acceptable — the connection is re-established transparently.
+- **`getRedis()` private function**: Encapsulating the initialisation logic in a named function makes the lazy-init pattern explicit and testable. The function is not exported, keeping the module's public API surface to just `redis` and `createRedisClient`.
+- **`createRedisClient()` reads `REDIS_URL` locally**: The factory function previously relied on the module-level `redisUrl` constant. With that constant removed, the function now reads and validates `REDIS_URL` itself. This makes the function self-contained and safe to call independently of whether `getRedis()` has been called first.
+- **Preserving `maxRetriesPerRequest: 3` and conditional TLS**: These options are unchanged. `maxRetriesPerRequest: 3` prevents a single slow command from retrying indefinitely on a flaky connection. The `rediss://` scheme detection for TLS is required for the Upstash Redis instance used in this project (as configured in `.env`).
+
+---
+
 #### `src/app/api/messages/[threadId]/route.ts` — Modified — April 7, 2026
 
 **Summary**
