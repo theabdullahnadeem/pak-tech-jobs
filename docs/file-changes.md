@@ -17,6 +17,76 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/api/messages/[threadId]/route.ts` — Modified — April 7, 2026
+
+**Summary**
+
+The `GET /api/messages/[threadId]` route handler was refactored to simplify the conditional Prisma query construction for headhunt thread message filtering. Previously, the handler built a `messageQuery` options object via a ternary expression and then passed it to `prisma.message.findMany(messageQuery)`. The refactored version eliminates the intermediate variable entirely, calling `prisma.message.findMany(...)` directly with the spread operator to conditionally include `take: 1` inline.
+
+Before:
+```typescript
+const messageQuery =
+  thread.isHeadhunt && thread.applicantAccepted !== true
+    ? {
+        where: { threadId },
+        orderBy: { sentAt: "asc" as const },
+        take: 1,
+      }
+    : {
+        where: { threadId },
+        orderBy: { sentAt: "asc" as const },
+      };
+
+const messages = await prisma.message.findMany(messageQuery);
+```
+
+After:
+```typescript
+const messages = await prisma.message.findMany({
+  where: { threadId },
+  orderBy: { sentAt: "asc" as const },
+  ...(thread.isHeadhunt && thread.applicantAccepted !== true ? { take: 1 } : {}),
+});
+```
+
+The `where`, `orderBy`, and conditional `take` fields are now expressed in a single object literal. All runtime behaviour is identical — the headhunt guard (`thread.isHeadhunt && thread.applicantAccepted !== true`) still limits the result to the first message when the applicant has not yet accepted the headhunt invitation.
+
+**Change**
+
+```diff
+-  const messageQuery =
+-    thread.isHeadhunt && thread.applicantAccepted !== true
+-      ? {
+-          where: { threadId },
+-          orderBy: { sentAt: "asc" as const },
+-          take: 1,
+-        }
+-      : {
+-          where: { threadId },
+-          orderBy: { sentAt: "asc" as const },
+-        };
+-
+-  const messages = await prisma.message.findMany(messageQuery);
++  const messages = await prisma.message.findMany({
++    where: { threadId },
++    orderBy: { sentAt: "asc" as const },
++    ...(thread.isHeadhunt && thread.applicantAccepted !== true ? { take: 1 } : {}),
++  });
+```
+
+**Reasoning**
+
+The previous implementation duplicated the `where` and `orderBy` clauses across both branches of the ternary. The only difference between the two branches was the presence or absence of `take: 1`. This duplication meant that any future change to the base query options (e.g., adding a `select` clause or changing the sort direction) would need to be applied in two places, creating a maintenance hazard. The refactored version has a single source of truth for the base query options, with the conditional `take` applied additively via spread.
+
+**Approach**
+
+- **Spread operator with conditional object (`...(condition ? { take: 1 } : {})`)**: This is the idiomatic TypeScript/JavaScript pattern for conditionally including a property in an object literal. When the condition is false, spreading an empty object `{}` is a no-op — no property is added. When true, `take: 1` is merged into the options object. This avoids both the duplication of the ternary-with-full-objects approach and the verbosity of an `if` statement that mutates a `let` variable after construction.
+- **Eliminating the intermediate `messageQuery` variable**: The variable served no purpose beyond holding the options object for a single subsequent call. Inlining the options directly into `prisma.message.findMany(...)` reduces the cognitive load of reading the function — there is one fewer named binding to track, and the query construction and execution are co-located on the same line.
+- **Preserving `"asc" as const`**: The `as const` assertion on the `orderBy` value is retained. Prisma's TypeScript types require the sort direction to be the literal type `"asc"` or `"desc"` rather than the broader `string` type. Without the assertion, TypeScript would infer `string` and produce a type error.
+- **No change to the headhunt guard logic**: The condition `thread.isHeadhunt && thread.applicantAccepted !== true` is preserved exactly. `applicantAccepted !== true` correctly handles both `null` (not yet responded) and `false` (explicitly declined) — both states should restrict the message view to the initial headhunt message only.
+
+---
+
 #### `tsconfig.json` — Modified — April 7, 2026
 
 **Summary**

@@ -1,28 +1,40 @@
 import Redis from "ioredis";
 
-const redisUrl = process.env.REDIS_URL;
+// Lazy singleton — only connect when actually used, not at import time
+let _redis: Redis | null = null;
 
-if (!redisUrl) {
-  throw new Error("REDIS_URL environment variable is not set");
+function getRedis(): Redis {
+  if (_redis) return _redis;
+
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl) {
+    throw new Error("REDIS_URL environment variable is not set");
+  }
+
+  _redis = new Redis(redisUrl, {
+    maxRetriesPerRequest: 3,
+    lazyConnect: false,
+    tls: redisUrl.startsWith("rediss://") ? {} : undefined,
+  });
+
+  return _redis;
 }
 
-// Singleton pattern — reuse connection across hot reloads in dev
-const globalForRedis = globalThis as unknown as { redis?: Redis };
-
-export const redis = globalForRedis.redis ?? new Redis(redisUrl, {
-  maxRetriesPerRequest: 3,
-  lazyConnect: false,
-  tls: redisUrl.startsWith("rediss://") ? {} : undefined,
+// Proxy object — accessing any property triggers lazy init
+export const redis = new Proxy({} as Redis, {
+  get(_target, prop) {
+    return (getRedis() as unknown as Record<string | symbol, unknown>)[prop];
+  },
 });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForRedis.redis = redis;
-}
-
 // Create a duplicate connection for pub/sub (required by Socket.io adapter)
-export function createRedisClient() {
-  return new Redis(redisUrl!, {
+export function createRedisClient(): Redis {
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl) {
+    throw new Error("REDIS_URL environment variable is not set");
+  }
+  return new Redis(redisUrl, {
     maxRetriesPerRequest: 3,
-    tls: redisUrl!.startsWith("rediss://") ? {} : undefined,
+    tls: redisUrl.startsWith("rediss://") ? {} : undefined,
   });
 }
