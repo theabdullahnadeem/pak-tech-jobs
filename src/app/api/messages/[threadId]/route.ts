@@ -43,19 +43,11 @@ export async function GET(
 
   // For headhunt threads where applicantAccepted is null or false,
   // only return the initial message (block further messages until accepted)
-  const messageQuery =
-    thread.isHeadhunt && thread.applicantAccepted !== true
-      ? {
-          where: { threadId },
-          orderBy: { sentAt: "asc" as const },
-          take: 1,
-        }
-      : {
-          where: { threadId },
-          orderBy: { sentAt: "asc" as const },
-        };
-
-  const messages = await prisma.message.findMany(messageQuery);
+  const messages = await prisma.message.findMany({
+    where: { threadId },
+    orderBy: { sentAt: "asc" as const },
+    ...(thread.isHeadhunt && thread.applicantAccepted !== true ? { take: 1 } : {}),
+  });
 
   return NextResponse.json(messages);
 }

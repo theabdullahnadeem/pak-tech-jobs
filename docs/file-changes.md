@@ -17,6 +17,45 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `tsconfig.json` — Modified — April 7, 2026
+
+**Summary**
+
+The TypeScript compiler configuration file `tsconfig.json` was updated. A single change was made to the `"exclude"` array: `"prisma.config.ts"` was appended as a second exclusion entry alongside the existing `"node_modules"` entry.
+
+Before:
+```json
+"exclude": ["node_modules"]
+```
+
+After:
+```json
+"exclude": ["node_modules", "prisma.config.ts"]
+```
+
+All other compiler options — `target`, `lib`, `allowJs`, `skipLibCheck`, `strict`, `noEmit`, `esModuleInterop`, `module`, `moduleResolution`, `resolveJsonModule`, `isolatedModules`, `jsx`, `incremental`, `plugins`, and `paths` — remain unchanged.
+
+**Change**
+
+```diff
+-  "exclude": ["node_modules"]
++  "exclude": ["node_modules", "prisma.config.ts"]
+```
+
+**Reasoning**
+
+`prisma.config.ts` is the Prisma configuration file introduced in Prisma 6.x that lives at the project root. It uses Prisma-specific configuration syntax and imports (`defineConfig` from `prisma/config`) that are not compatible with the project's TypeScript compiler settings — specifically the `"module": "esnext"` and `"moduleResolution": "bundler"` options configured for Next.js. Including `prisma.config.ts` in the TypeScript compilation causes type errors and module resolution failures because the Prisma config file is intended to be consumed by the Prisma CLI directly, not compiled as part of the Next.js application bundle.
+
+Excluding it from the TypeScript compilation eliminates these spurious type errors without affecting the Prisma CLI's ability to read the config file (the CLI reads it independently of `tsc`).
+
+**Approach**
+
+- **Exclusion in `tsconfig.json` rather than a separate `tsconfig.prisma.json`**: The simplest fix is to exclude the single file from the existing TypeScript project. Creating a separate `tsconfig.prisma.json` would be over-engineering for a single file that the TypeScript compiler should simply ignore.
+- **Appending to the existing `"exclude"` array rather than replacing it**: The `"node_modules"` exclusion must remain — removing it would cause TypeScript to attempt to type-check all of `node_modules`, dramatically slowing compilation and producing thousands of spurious errors. The new entry is appended alongside it, preserving the existing exclusion.
+- **Excluding `prisma.config.ts` specifically rather than a glob pattern**: A targeted file exclusion (`"prisma.config.ts"`) is more precise than a pattern like `"prisma.*"` or `"*.config.ts"`, which could inadvertently exclude other config files (e.g., `postcss.config.mjs` if it were `.ts`, or future `vitest.config.ts`) that should remain in the TypeScript project. Precision in exclusion lists prevents accidental suppression of type-checking on files that should be checked.
+
+---
+
 #### `src/app/api/applications/[id]/reject/route.ts` — Saved (no code changes) — April 7, 2026
 
 **Summary**
