@@ -17,6 +17,45 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/api/applications/[id]/reject/route.ts` — Saved (no code changes) — April 7, 2026
+
+**Summary**
+
+The file `src/app/api/applications/[id]/reject/route.ts` was saved with no content changes. The diff was empty. The file implements the `PATCH /api/applications/[id]/reject` route handler, which rejects a job application with a mandatory structured reason. Its complete structure:
+
+1. Imports `NextRequest`, `NextResponse` from `next/server`; `prisma` from `@/lib/prisma`; `auth` from `@/lib/auth`; `RejectionReason` enum from `@prisma/client`; `recalculateRecruiterMetrics` from `@/lib/recruiterMetrics`; and `emitToUser` from `@/lib/socketio`.
+2. Defines a `REJECTION_REASON_LABELS` map (5 entries: `PORTFOLIO_GAP`, `SALARY_MISMATCH`, `SPECIFIC_SKILL_MISSING`, `ROLE_FILLED`, `OVERQUALIFIED`) and a `VALID_REJECTION_REASONS` array derived from `Object.values(RejectionReason)`.
+3. Exports a single `PATCH` handler that:
+   - Resolves the dynamic `[id]` param via `await params`.
+   - Authenticates via `auth()` — returns `401` if no session.
+   - Authorises — returns `403` if the caller is not a `RECRUITER`.
+   - Fetches the application with its `jobPost` (id, title, recruiterId) — returns `404` if not found.
+   - Ownership-checks the job post against `session.user.id` — returns `403` if mismatch.
+   - Parses the JSON body — returns `400` on invalid JSON.
+   - Validates `rejectionReason` is present and a string — returns `400` if missing.
+   - Validates `rejectionReason` is a member of `VALID_REJECTION_REASONS` — returns `400` with the full list if not.
+   - Runs a `prisma.$transaction` that: updates the application to `stage: "REJECTED"`, sets `rejectionReason`, optionally sets `recruiterNotes`, and sets `firstActionAt = now` if not already recorded; and creates a `REJECTION_REASON` notification for the applicant with a human-readable body built from `REJECTION_REASON_LABELS`.
+   - Calls `recalculateRecruiterMetrics(recruiterId)` after the transaction.
+   - Emits two real-time Socket.io events to the applicant: `application:stage_changed` (with `applicationId` and `newStage: "REJECTED"`) and `notification:new` (with the created notification object).
+   - Returns the updated application object.
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+The route itself was previously completed as part of the `linkedin-style-application-flow` spec implementation (Requirements 5.4, 5.5). It handles the structured rejection flow that the recruiter dashboard's `RejectionModal` component triggers — either via single-card drag-to-reject or the bulk rejection path. The separation of rejection into its own sub-route (`/reject`) rather than a generic stage PATCH keeps the rejection-specific validation (mandatory `rejectionReason`, notification creation, metrics recalculation) isolated from the general stage-advancement logic in `PATCH /api/applications/[id]`.
+
+**Approach**
+
+- **Dedicated `/reject` sub-route over a generic stage PATCH**: The general `PATCH /api/applications/[id]` handles stage advancement (e.g., `APPLIED → SEEN → SHORTLISTED`). Rejection has additional mandatory requirements — a structured reason, a notification with a human-readable label, and a metrics recalculation — that would clutter the general handler with conditional branches. A dedicated sub-route keeps each handler single-responsibility and independently testable.
+- **`prisma.$transaction` for atomicity**: The application update and the notification creation are wrapped in a single transaction. If the notification insert fails, the stage update is rolled back, ensuring the applicant is never left in `REJECTED` state without a corresponding notification explaining why.
+- **`REJECTION_REASON_LABELS` map for human-readable notification body**: Rather than storing the raw enum value in the notification body (e.g., `"SALARY_MISMATCH"`), the handler maps it to a readable label (`"Salary Mismatch"`) before constructing the notification text. This means the applicant sees a meaningful message without any client-side label mapping.
+- **`firstActionAt` conditional set**: The field is only set if it is currently `null`, preserving the original timestamp of the recruiter's first interaction with the application. This is used for SLA tracking and response-time metrics — overwriting it on a subsequent action would corrupt the metric.
+- **Non-blocking Socket.io emits after the transaction**: `emitToUser` calls are made outside the Prisma transaction and are not awaited. Real-time delivery is best-effort — if the Socket.io server is temporarily unavailable, the transaction has already committed and the applicant will see the updated stage on their next page load. Blocking the HTTP response on Socket.io delivery would introduce unnecessary latency and a failure mode where a successful DB write appears to fail.
+- **`recalculateRecruiterMetrics` after rejection**: Rejection is a terminal stage that affects the recruiter's pipeline metrics (e.g., rejection rate, average time-to-decision). Recalculating immediately after the transaction ensures the metrics dashboard reflects the latest state without a separate cron job or delayed update.
+
+---
+
 #### `package.json` — Modified — April 7, 2026
 
 **Summary**
