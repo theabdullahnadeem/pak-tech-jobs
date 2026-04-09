@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LineChart, Line, FunnelChart, Funnel, LabelList,
+  LineChart, Line,
 } from "recharts";
 
 interface Analytics {
@@ -44,67 +44,63 @@ export default function RecruiterAnalyticsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-950 px-6 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Hiring Analytics</h1>
+    <div className="min-h-screen bg-gray-950 px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Hiring Analytics</h1>
         <p className="mt-1 text-sm text-gray-400">Your pipeline performance at a glance</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {/* KPI Cards — 2 cols on mobile, 4 on sm+ */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
         {[
           { label: "Total Applications", value: data.totalApplications },
-          { label: "Avg Response Time", value: data.avgResponseHours != null ? `${data.avgResponseHours}h` : "N/A" },
+          { label: "Avg Response", value: data.avgResponseHours != null ? `${data.avgResponseHours}h` : "N/A" },
           { label: "Offers Made", value: data.funnelData.find(f => f.stage === "OFFER")?.count ?? 0 },
           { label: "Offer Rate", value: data.totalApplications > 0 ? `${Math.round(((data.funnelData.find(f => f.stage === "OFFER")?.count ?? 0) / data.totalApplications) * 100)}%` : "0%" },
         ].map(kpi => (
-          <div key={kpi.label} className="rounded-xl border border-white/10 bg-gray-900 p-4">
-            <p className="text-xs text-gray-400">{kpi.label}</p>
-            <p className="mt-1 text-2xl font-bold text-white">{kpi.value}</p>
+          <div key={kpi.label} className="rounded-xl border border-white/10 bg-gray-900 p-3 sm:p-4">
+            <p className="text-xs text-gray-400 leading-tight">{kpi.label}</p>
+            <p className="mt-1 text-xl sm:text-2xl font-bold text-white">{kpi.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Funnel */}
-        <div className="rounded-xl border border-white/10 bg-gray-900 p-5">
+        <div className="rounded-xl border border-white/10 bg-gray-900 p-4 sm:p-5">
           <h2 className="mb-4 text-sm font-semibold text-white">Pipeline Funnel</h2>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={data.funnelData} layout="vertical">
-              <XAxis type="number" tick={{ fill: "#9ca3af", fontSize: 11 }} />
-              <YAxis dataKey="stage" type="category" tick={{ fill: "#9ca3af", fontSize: 11 }} width={90} />
-              <Tooltip contentStyle={{ background: "#111827", border: "1px solid #374151", borderRadius: 8 }} />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                {data.funnelData.map((entry) => (
-                  <rect key={entry.stage} fill={STAGE_COLORS[entry.stage] || "#6b7280"} />
-                ))}
-              </Bar>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data.funnelData} layout="vertical" margin={{ left: 0, right: 8 }}>
+              <XAxis type="number" tick={{ fill: "#9ca3af", fontSize: 10 }} />
+              <YAxis dataKey="stage" type="category" tick={{ fill: "#9ca3af", fontSize: 10 }} width={80} />
+              <Tooltip contentStyle={{ background: "#111827", border: "1px solid #374151", borderRadius: 8, fontSize: 12 }} />
+              <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Application Trend */}
-        <div className="rounded-xl border border-white/10 bg-gray-900 p-5">
+        <div className="rounded-xl border border-white/10 bg-gray-900 p-4 sm:p-5">
           <h2 className="mb-4 text-sm font-semibold text-white">Applications (Last 30 Days)</h2>
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={data.applicationTrend}>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={data.applicationTrend} margin={{ left: -10, right: 8 }}>
               <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 10 }} tickFormatter={d => d.slice(5)} />
-              <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} allowDecimals={false} />
-              <Tooltip contentStyle={{ background: "#111827", border: "1px solid #374151", borderRadius: 8 }} />
+              <YAxis tick={{ fill: "#9ca3af", fontSize: 10 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "#111827", border: "1px solid #374151", borderRadius: 8, fontSize: 12 }} />
               <Line type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Conversion Rates */}
-        <div className="rounded-xl border border-white/10 bg-gray-900 p-5">
+        <div className="rounded-xl border border-white/10 bg-gray-900 p-4 sm:p-5">
           <h2 className="mb-4 text-sm font-semibold text-white">Stage Conversion Rates</h2>
           <div className="space-y-3">
             {data.conversionRates.map(cr => (
               <div key={`${cr.from}-${cr.to}`}>
                 <div className="mb-1 flex justify-between text-xs text-gray-400">
-                  <span>{cr.from} → {cr.to}</span>
-                  <span className="font-medium text-white">{cr.rate}%</span>
+                  <span className="truncate mr-2">{cr.from} → {cr.to}</span>
+                  <span className="font-medium text-white shrink-0">{cr.rate}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-gray-800">
                   <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: `${cr.rate}%` }} />
@@ -115,15 +111,15 @@ export default function RecruiterAnalyticsPage() {
         </div>
 
         {/* Top Jobs */}
-        <div className="rounded-xl border border-white/10 bg-gray-900 p-5">
+        <div className="rounded-xl border border-white/10 bg-gray-900 p-4 sm:p-5">
           <h2 className="mb-4 text-sm font-semibold text-white">Top Jobs by Applications</h2>
           <div className="space-y-2">
             {data.topJobs.length === 0 ? (
               <p className="text-sm text-gray-500">No data yet</p>
             ) : data.topJobs.map((job, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg bg-gray-800/50 px-3 py-2">
-                <span className="truncate text-sm text-gray-300">{job.title}</span>
-                <span className="ml-2 shrink-0 rounded-full bg-emerald-900/40 px-2 py-0.5 text-xs text-emerald-400">{job.count}</span>
+              <div key={i} className="flex items-center justify-between rounded-lg bg-gray-800/50 px-3 py-2 gap-2">
+                <span className="truncate text-sm text-gray-300 min-w-0">{job.title}</span>
+                <span className="shrink-0 rounded-full bg-emerald-900/40 px-2 py-0.5 text-xs text-emerald-400">{job.count}</span>
               </div>
             ))}
           </div>

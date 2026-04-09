@@ -116,12 +116,14 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Button */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-primary/10 transition-colors"
-            aria-label="Toggle menu"
-          >
+          {/* Mobile: notification bell + hamburger */}
+          <div className="flex items-center gap-1 md:hidden">
+            <NotificationBell />
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
+              aria-label="Toggle menu"
+            >
             <svg
               className="w-6 h-6"
               fill="none"
@@ -145,6 +147,7 @@ export default function Navbar() {
               )}
             </svg>
           </button>
+          </div>
         </div>
       </div>
 

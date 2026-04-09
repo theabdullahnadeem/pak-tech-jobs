@@ -69,6 +69,8 @@ export default function JobAlertsPage() {
     setAlerts(prev => prev.filter(a => a.id !== id));
   };
 
+  const inputCls = "w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none";
+
   if (loading) return (
     <div className="flex min-h-screen items-center justify-center bg-gray-950">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
@@ -76,41 +78,39 @@ export default function JobAlertsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-950 px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Job Alerts</h1>
-          <p className="mt-1 text-sm text-gray-400">Get notified when matching jobs are posted</p>
+    <div className="min-h-screen bg-gray-950 px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Job Alerts</h1>
+          <p className="mt-1 text-sm text-gray-400 hidden sm:block">Get notified when matching jobs are posted</p>
         </div>
         <button onClick={() => setShowForm(!showForm)}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors">
+          className="shrink-0 rounded-lg bg-emerald-600 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors">
           + New Alert
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-white/10 bg-gray-900 p-5 space-y-4">
+        <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-white/10 bg-gray-900 p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-white">Create Job Alert</h2>
           <div>
             <label className="block text-xs text-gray-400 mb-1">Keywords (comma-separated) *</label>
-            <input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="React, TypeScript, Node.js"
-              className="w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none" />
+            <input value={keywords} onChange={e => setKeywords(e.target.value)}
+              placeholder="React, TypeScript, Node.js" className={inputCls} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          {/* 1 col on mobile, 2 on sm */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-xs text-gray-400 mb-1">City</label>
-              <input value={city} onChange={e => setCity(e.target.value)} placeholder="Lahore"
-                className="w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none" />
+              <input value={city} onChange={e => setCity(e.target.value)} placeholder="Lahore" className={inputCls} />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Min Salary (PKR)</label>
-              <input type="number" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} placeholder="50000"
-                className="w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none" />
+              <input type="number" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} placeholder="50000" className={inputCls} />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Job Type</label>
-              <select value={jobType} onChange={e => setJobType(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+              <select value={jobType} onChange={e => setJobType(e.target.value)} className={inputCls}>
                 <option value="">Any</option>
                 {["FULL_TIME","REMOTE","CONTRACT","INTERNSHIP","PART_TIME"].map(t => (
                   <option key={t} value={t}>{t.replace("_"," ")}</option>
@@ -119,8 +119,7 @@ export default function JobAlertsPage() {
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Experience Level</label>
-              <select value={experienceLevel} onChange={e => setExperienceLevel(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+              <select value={experienceLevel} onChange={e => setExperienceLevel(e.target.value)} className={inputCls}>
                 <option value="">Any</option>
                 {["JUNIOR","MID","SENIOR","LEAD"].map(l => (
                   <option key={l} value={l}>{l}</option>
@@ -142,34 +141,42 @@ export default function JobAlertsPage() {
       )}
 
       {alerts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gray-900 py-20">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gray-900 py-16 px-4 text-center">
           <p className="text-4xl mb-3">🔔</p>
           <p className="text-gray-400">No job alerts yet</p>
+          <p className="text-xs text-gray-500 mt-1">Create an alert to get notified of new matching jobs</p>
         </div>
       ) : (
         <div className="space-y-3">
           {alerts.map(alert => (
-            <div key={alert.id} className="rounded-xl border border-white/10 bg-gray-900 px-5 py-4 flex items-center justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap gap-1 mb-1">
-                  {alert.keywords.map(k => (
-                    <span key={k} className="rounded-full bg-emerald-900/30 px-2 py-0.5 text-xs text-emerald-400">{k}</span>
-                  ))}
+            <div key={alert.id} className="rounded-xl border border-white/10 bg-gray-900 px-4 sm:px-5 py-4">
+              {/* Stack on mobile */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap gap-1 mb-1.5">
+                    {alert.keywords.map(k => (
+                      <span key={k} className="rounded-full bg-emerald-900/30 px-2 py-0.5 text-xs text-emerald-400">{k}</span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {[alert.city, alert.jobType?.replace("_"," "), alert.experienceLevel, alert.salaryMin ? `PKR ${alert.salaryMin.toLocaleString()}+` : null]
+                      .filter(Boolean).join(" · ") || "Any location / type"}
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  {[alert.city, alert.jobType?.replace("_"," "), alert.experienceLevel, alert.salaryMin ? `PKR ${alert.salaryMin.toLocaleString()}+` : null]
-                    .filter(Boolean).join(" · ") || "Any location/type"}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button onClick={() => handleToggle(alert.id, alert.isActive)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${alert.isActive ? "bg-emerald-900/40 text-emerald-400 hover:bg-emerald-900/60" : "bg-gray-800 text-gray-500 hover:bg-gray-700"}`}>
-                  {alert.isActive ? "Active" : "Paused"}
-                </button>
-                <button onClick={() => handleDelete(alert.id)}
-                  className="rounded-lg border border-red-500/30 px-3 py-1 text-xs text-red-400 hover:bg-red-950/30 transition-colors">
-                  Delete
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => handleToggle(alert.id, alert.isActive)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                      alert.isActive
+                        ? "bg-emerald-900/40 text-emerald-400 hover:bg-emerald-900/60"
+                        : "bg-gray-800 text-gray-500 hover:bg-gray-700"
+                    }`}>
+                    {alert.isActive ? "Active" : "Paused"}
+                  </button>
+                  <button onClick={() => handleDelete(alert.id)}
+                    className="rounded-lg border border-red-500/30 px-3 py-1 text-xs text-red-400 hover:bg-red-950/30 transition-colors">
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}

@@ -17,6 +17,50 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/api/referrals/route.ts` — Modified — April 9, 2026
+
+**Summary**
+
+The `POST /api/referrals` route handler had its body completed. Previously the file ended mid-expression with a truncated `NextResponse.json` call and no closing brace, making the file syntactically invalid. The edit added the missing content:
+
+- The closing parenthesis and semicolon for the early-return `NextResponse.json(existing)` call when a duplicate referral is found.
+- Generation of a unique referral `code` via `nanoid(10)`.
+- Computation of an `expiresAt` timestamp set to 30 days from the current time.
+- A `prisma.referral.create(...)` call persisting the new referral record with `senderId`, `jobPostId`, `code`, and `expiresAt`.
+- A `NextResponse.json(referral, { status: 201 })` return for the newly created referral.
+- The closing brace of the exported `POST` function.
+
+**Change**
+
+```diff
+-  if (existing) return NextResponse.json
+\ No newline at end of file
++  if (existing) return NextResponse.json(existing);
++
++  const code = nanoid(10);
++  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
++
++  const referral = await prisma.referral.create({
++    data: { senderId: session.user.id, jobPostId, code, expiresAt },
++  });
++
++  return NextResponse.json(referral, { status: 201 });
++}
+```
+
+**Reasoning**
+
+The file was in a broken state — it had been partially written and saved before the content was complete, leaving the TypeScript source syntactically invalid. The completed logic implements the two terminal branches of the referral creation flow: returning the existing referral if the sender has already created one for this job post (idempotent early return), and creating a new referral record with a unique code and a 30-day expiry window if no duplicate exists.
+
+**Approach**
+
+- **`nanoid(10)` for referral code generation**: `nanoid` produces a URL-safe, cryptographically random string. A 10-character code from nanoid's default alphabet (~64 symbols) yields ~60 bits of entropy — sufficient to make brute-force guessing of referral codes infeasible while keeping the code short enough to embed in a URL.
+- **30-day expiry (`Date.now() + 30 * 24 * 60 * 60 * 1000`)**: The expiry is computed in milliseconds and stored as a `Date` object. 30 days is a conventional referral link validity window — long enough for a referred candidate to act on the link, short enough to limit the exposure window of a leaked code.
+- **Idempotent early return with `200` for duplicates**: Returning the existing referral record (rather than a `409 Conflict`) on duplicate creation is a deliberate UX choice — the caller (e.g., a "Copy referral link" button) gets a usable referral object regardless of whether it was just created or already existed, without needing to handle an error response.
+- **`status: 201` for new referral creation**: HTTP 201 Created is the correct status for a successful resource creation, distinguishing it from the `200 OK` returned for the duplicate case. This allows callers to detect whether a new record was created or an existing one was returned.
+
+---
+
 #### `src/lib/rateLimit.ts` — Saved (no code changes) — April 9, 2026
 
 **Summary**
