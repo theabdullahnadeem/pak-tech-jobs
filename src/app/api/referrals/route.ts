@@ -11,10 +11,19 @@ export async function GET(_req: NextRequest) {
   const referrals = await prisma.referral.findMany({
     where: { senderId: session.user.id },
     orderBy: { createdAt: "desc" },
-    include: { jobPost: { select: { id: true, title: true } } },
   });
 
-  return NextResponse.json(referrals);
+  // Enrich with job title
+  const jobIds = [...new Set(referrals.map(r => r.jobPostId))];
+  const jobs = await prisma.jobPost.findMany({
+    where: { id: { in: jobIds } },
+    select: { id: true, title: true },
+  });
+  const jobMap = Object.fromEntries(jobs.map(j => [j.id, j]));
+
+  const enriched = referrals.map(r => ({ ...r, jobPost: jobMap[r.jobPostId] ?? null }));
+
+  return NextResponse.json(enriched);
 }
 
 export async function POST(req: NextRequest) {

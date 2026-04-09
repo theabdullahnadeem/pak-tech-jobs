@@ -6,10 +6,7 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
   if (!code) return NextResponse.json({ error: "code required" }, { status: 400 });
 
-  const referral = await prisma.referral.findUnique({
-    where: { code },
-    include: { jobPost: { select: { id: true, title: true } } },
-  });
+  const referral = await prisma.referral.findUnique({ where: { code } });
 
   if (!referral) return NextResponse.json({ error: "Invalid referral code" }, { status: 404 });
   if (referral.expiresAt && referral.expiresAt < new Date()) {
@@ -20,5 +17,5 @@ export async function GET(req: NextRequest) {
   await prisma.referral.update({ where: { code }, data: { clicks: { increment: 1 } } });
 
   // Redirect to the job post
-  return NextResponse.redirect(new URL(`/jobs/${referral.jobPost.id}?ref=${code}`, req.url));
+  return NextResponse.redirect(new URL(`/jobs/${referral.jobPostId}?ref=${code}`, req.url));
 }
