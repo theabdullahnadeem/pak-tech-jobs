@@ -121,6 +121,35 @@ export default function JobDetailPage({
   const [existingApplication, setExistingApplication] = useState<{ stage: string } | null>(null);
   const [checkingApplication, setCheckingApplication] = useState(false);
 
+  const [saved, setSaved] = useState(false);
+  const [savingJob, setSavingJob] = useState(false);
+
+  useEffect(() => {
+    if (!session) return;
+    fetch("/api/saved-jobs")
+      .then(r => r.json())
+      .then((data: { jobPost: { id: string } }[]) => {
+        if (Array.isArray(data)) setSaved(data.some(s => s.jobPost.id === id));
+      });
+  }, [session, id]);
+
+  const handleSaveJob = async () => {
+    if (!session) { router.push("/login"); return; }
+    setSavingJob(true);
+    if (saved) {
+      await fetch(`/api/saved-jobs?jobPostId=${id}`, { method: "DELETE" });
+      setSaved(false);
+    } else {
+      await fetch("/api/saved-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobPostId: id }),
+      });
+      setSaved(true);
+    }
+    setSavingJob(false);
+  };
+
   // Fetch job details
   useEffect(() => {
     async function fetchJob() {
@@ -347,6 +376,20 @@ export default function JobDetailPage({
         {/* Apply section */}
         <div className="bg-card dark:bg-card-dark border border-border dark:border-border-dark rounded-2xl p-6 mb-5">
           <h2 className="text-base font-semibold mb-3">Apply for this role</h2>
+
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={handleSaveJob}
+              disabled={savingJob}
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors disabled:opacity-50 ${
+                saved
+                  ? "border-amber-500/40 bg-amber-950/20 text-amber-400 hover:bg-amber-950/30"
+                  : "border-white/10 text-gray-400 hover:bg-white/5 dark:border-border-dark"
+              }`}
+            >
+              {saved ? "🔖 Saved" : "🔖 Save Job"}
+            </button>
+          </div>
 
           {job.isClosed || !job.isActive ? (
             <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">

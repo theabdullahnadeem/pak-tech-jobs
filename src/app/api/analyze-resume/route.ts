@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { auth } from "@/lib/auth";
+import { rateLimit, rateLimitByUser, RATE_LIMITS } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await auth();
+    if (session?.user) {
+      const rl = await rateLimitByUser(session.user.id, RATE_LIMITS.ai);
+      if (rl) return rl;
+    } else {
+      const rl = await rateLimit(req, RATE_LIMITS.ai);
+      if (rl) return rl;
+    }
+
     const { resumeText } = await req.json();
 
     if (!resumeText || typeof resumeText !== "string" || resumeText.trim().length < 50) {

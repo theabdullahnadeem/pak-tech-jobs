@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { requireVerifiedRecruiter } from "@/lib/requireVerifiedRecruiter";
 import { broadcast } from "@/lib/socketio";
 import { getCached, setCached, invalidateCache } from "@/lib/cache";
+import { rateLimitByUser, RATE_LIMITS } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -140,6 +141,9 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   const guard = await requireVerifiedRecruiter(session);
   if (guard) return guard;
+
+  const rl = await rateLimitByUser(session!.user.id, RATE_LIMITS.jobPost);
+  if (rl) return rl;
 
   let body: unknown;
   try {

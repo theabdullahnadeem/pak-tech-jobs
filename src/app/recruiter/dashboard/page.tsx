@@ -585,6 +585,18 @@ export default function RecruiterDashboardPage() {
 
         <div className="flex items-center gap-3">
           <Link
+            href="/recruiter/analytics"
+            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
+          >
+            Analytics
+          </Link>
+          <Link
+            href="/recruiter/ai-tools"
+            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
+          >
+            🤖 AI Tools
+          </Link>
+          <Link
             href="/recruiter/jobs"
             className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
           >

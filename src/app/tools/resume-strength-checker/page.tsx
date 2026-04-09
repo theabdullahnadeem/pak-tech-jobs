@@ -123,20 +123,21 @@ export default function ResumeStrengthChecker() {
 
   useGSAP(() => {
     const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
-    tl.fromTo(".resume-icon",
-      { scale: 0, rotation: -180 },
-      { scale: 1, rotation: 0, duration: 0.8, ease: "back.out(1.7)" }
-    )
-    .fromTo(".resume-heading",
-      { y: 40, opacity: 0, clipPath: "inset(100% 0 0 0)" },
-      { y: 0, opacity: 1, clipPath: "inset(0% 0 0 0)", duration: 0.8 },
-      "-=0.4"
-    )
-    .fromTo(".resume-form",
-      { y: 60, opacity: 0, scale: 0.95, rotateX: 8, transformPerspective: 800 },
-      { y: 0, opacity: 1, scale: 1, rotateX: 0, duration: 0.8 },
-      "-=0.3"
-    );
+    tl
+      .fromTo(".resume-icon",
+        { scale: 0, rotation: -180, opacity: 0 },
+        { scale: 1, rotation: 0, opacity: 1, duration: 0.9, ease: "back.out(2)" }
+      )
+      .fromTo(".resume-heading",
+        { y: 50, opacity: 0, clipPath: "inset(100% 0 0 0)" },
+        { y: 0, opacity: 1, clipPath: "inset(0% 0 0 0)", duration: 0.9 },
+        "-=0.4"
+      )
+      .fromTo(".resume-form",
+        { y: 70, opacity: 0, scale: 0.93, rotateX: 10, transformPerspective: 900 },
+        { y: 0, opacity: 1, scale: 1, rotateX: 0, duration: 0.9 },
+        "-=0.4"
+      );
   }, { scope: containerRef });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

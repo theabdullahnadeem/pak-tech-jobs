@@ -3,40 +3,42 @@
 import Link from "next/link";
 import { useRef } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { tools } from "@/data/tools";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function ToolsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    // Heading entrance
     const headingTl = gsap.timeline({ defaults: { ease: "expo.out" } });
     headingTl
       .fromTo(".tools-icon-spin",
-        { scale: 0, rotation: -360 },
-        { scale: 1, rotation: 0, duration: 1, ease: "back.out(1.7)" }
+        { scale: 0, rotation: -360, opacity: 0 },
+        { scale: 1, rotation: 0, opacity: 1, duration: 1, ease: "back.out(1.7)" }
       )
       .fromTo(".tools-heading-text",
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7 },
+        { y: 50, opacity: 0, clipPath: "inset(100% 0 0 0)" },
+        { y: 0, opacity: 1, clipPath: "inset(0% 0 0 0)", duration: 0.9 },
         "-=0.5"
       )
       .fromTo(".tools-heading-desc",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5 },
+        { y: 25, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6 },
         "-=0.3"
       );
 
-    // Cards — pop with bounce, alternating from left/right
     const cards = gsap.utils.toArray<HTMLElement>(".tool-item-card");
     cards.forEach((card, i) => {
-      const fromX = i % 2 === 0 ? -80 : 80;
+      const fromX = i % 2 === 0 ? -70 : 70;
       gsap.fromTo(card,
-        { x: fromX, y: 40, opacity: 0, scale: 0.85, rotateZ: fromX > 0 ? 4 : -4 },
+        { x: fromX, y: 50, opacity: 0, scale: 0.88, rotateZ: fromX > 0 ? 3 : -3, rotateX: 8, transformPerspective: 800 },
         {
-          x: 0, y: 0, opacity: 1, scale: 1, rotateZ: 0,
-          duration: 0.8, delay: 0.3 + i * 0.12, ease: "back.out(1.3)",
+          x: 0, y: 0, opacity: 1, scale: 1, rotateZ: 0, rotateX: 0,
+          duration: 0.75, ease: "power4.out",
+          scrollTrigger: { trigger: card, start: "top 88%", toggleActions: "play none none none" },
         }
       );
     });
@@ -45,6 +47,7 @@ export default function ToolsPage() {
   return (
     <div ref={containerRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
       <div className="text-center mb-14">
+        <div className="tools-icon-spin text-5xl mb-4">🛠️</div>
         <h1 className="tools-heading-text text-3xl sm:text-4xl font-bold mb-4">
           Free <span className="gradient-text">Career Tools</span>
         </h1>

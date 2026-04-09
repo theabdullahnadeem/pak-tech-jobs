@@ -61,6 +61,12 @@ enum NotificationType {
   RECRUITER_REJECTED
   SALARY_APPROVED
   SALARY_REJECTED
+  JOB_ALERT
+  INTERVIEW_SCHEDULED
+  INTERVIEW_REMINDER
+  REFERRAL_JOINED
+  SKILL_VERIFIED
+  REVIEW_RECEIVED
 }
 
 enum VerificationStatus {
@@ -97,6 +103,17 @@ model User {
   responseRate         Float   @default(100)
   avgResponseTimeHours Float?
 
+  // Company profile (recruiter)
+  companyDescription   String?
+  companyWebsite       String?
+  companyLogoPublicId  String?
+  companySize          String?
+  companyIndustry      String?
+  companyLocation      String?
+
+  // Skill verification
+  verifiedSkills       String[]  @default([])
+
   jobPosts                  JobPost[]
   applications              Application[]
   notifications             Notification[]
@@ -106,6 +123,15 @@ model User {
   messageThreadsAsRecruiter MessageThread[] @relation("RecruiterThreads")
   headhuntOutreachSent      HeadhuntOutreach[] @relation("OutreachSent")
   headhuntOutreachReceived  HeadhuntOutreach[] @relation("OutreachReceived")
+  savedJobs                 SavedJob[]
+  jobAlerts                 JobAlert[]
+  interviewsAsApplicant     InterviewSlot[]    @relation("InterviewApplicant")
+  interviewsAsRecruiter     InterviewSlot[]    @relation("InterviewRecruiter")
+  referralsSent             Referral[]         @relation("ReferralSender")
+  referralsReceived         Referral[]         @relation("ReferralReceiver")
+  skillVerifications        SkillVerification[]
+  reviewsGiven              Review[]           @relation("ReviewGiver")
+  reviewsReceived           Review[]           @relation("ReviewReceiver")
 }
 
 model JobPost {
@@ -130,6 +156,7 @@ model JobPost {
   requiredFields        String[]        @default(["name", "email"])
 
   applications Application[]
+  savedByUsers SavedJob[]
 
   @@index([city])
   @@index([jobType])
@@ -244,4 +271,132 @@ model DemandSnapshot {
 
   @@unique([skill, timeRange, snapshotDate])
   @@index([skill, snapshotDate])
+}
+
+// ─── Saved Jobs ───────────────────────────────────────────────────────────────
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostId String
+  jobPost   JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  savedAt   DateTime @default(now())
+
+  @@unique([userId, jobPostId])
+  @@index([userId])
+}
+
+// ─── Job Alerts ───────────────────────────────────────────────────────────────
+
+model JobAlert {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords        String[]
+  city            String?
+  jobType         JobType?
+  experienceLevel ExperienceLevel?
+  salaryMin       Int?
+  isActive        Boolean         @default(true)
+  lastTriggeredAt DateTime?
+  createdAt       DateTime        @default(now())
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// ─── Interview Scheduler ──────────────────────────────────────────────────────
+
+enum InterviewStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  CANCELLED
+  COMPLETED
+}
+
+model InterviewSlot {
+  id            String          @id @default(cuid())
+  applicationId String
+  recruiterId   String
+  recruiter     User            @relation("InterviewRecruiter", fields: [recruiterId], references: [id])
+  applicantId   String
+  applicant     User            @relation("InterviewApplicant", fields: [applicantId], references: [id])
+  proposedSlots DateTime[]
+  confirmedSlot DateTime?
+  status        InterviewStatus @default(PENDING)
+  meetingLink   String?
+  notes         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([applicationId])
+  @@index([applicantId])
+  @@index([recruiterId])
+}
+
+// ─── Referral System ─────────────────────────────────────────────────────────
+
+model Referral {
+  id          String    @id @default(cuid())
+  senderId    String
+  sender      User      @relation("ReferralSender", fields: [senderId], references: [id])
+  receiverId  String?
+  receiver    User?     @relation("ReferralReceiver", fields: [receiverId], references: [id])
+  jobPostId   String
+  code        String    @unique
+  clicks      Int       @default(0)
+  conversions Int       @default(0)
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+
+  @@index([senderId])
+  @@index([code])
+}
+
+// ─── Skill Verification ───────────────────────────────────────────────────────
+
+enum VerificationMethod {
+  QUIZ
+  PORTFOLIO
+  ENDORSEMENT
+}
+
+model SkillVerification {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill       String
+  method      VerificationMethod
+  score       Int?
+  evidenceUrl String?
+  verifiedAt  DateTime           @default(now())
+  expiresAt   DateTime?
+
+  @@unique([userId, skill])
+  @@index([userId])
+}
+
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+
+enum ReviewType {
+  APPLICANT_REVIEWS_RECRUITER
+  RECRUITER_REVIEWS_APPLICANT
+}
+
+model Review {
+  id            String     @id @default(cuid())
+  giverId       String
+  giver         User       @relation("ReviewGiver", fields: [giverId], references: [id])
+  receiverId    String
+  receiver      User       @relation("ReviewReceiver", fields: [receiverId], references: [id])
+  type          ReviewType
+  rating        Int
+  comment       String?
+  applicationId String?
+  createdAt     DateTime   @default(now())
+
+  @@unique([giverId, receiverId, applicationId])
+  @@index([receiverId])
 }

@@ -21,14 +21,15 @@
     "cloudinary": "^2.9.0",
     "gsap": "^3.14.2",
     "ioredis": "^5.10.1",
+    "nanoid": "^5.1.7",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
+    "preact": "^10.25.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.8.1",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3",
-    "preact": "^10.25.4"
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@prisma/client": "^5.22.0",

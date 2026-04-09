@@ -13,59 +13,59 @@ export default function CoursesPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    /* ─── HERO — cinematic entrance ─── */
+    /* ── Hero: staggered entrance with 3D tilt ── */
     const heroTl = gsap.timeline({ defaults: { ease: "expo.out" } });
     heroTl
       .fromTo(".courses-badge",
-        { y: 50, opacity: 0, scale: 0.7 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.7)" }
+        { y: 40, opacity: 0, scale: 0.7, rotation: -8 },
+        { y: 0, opacity: 1, scale: 1, rotation: 0, duration: 0.8, ease: "back.out(2)" }
       )
       .fromTo(".courses-title",
-        { y: 60, opacity: 0, rotateX: 20, transformPerspective: 600 },
-        { y: 0, opacity: 1, rotateX: 0, duration: 0.9 },
+        { y: 70, opacity: 0, clipPath: "inset(100% 0 0 0)", rotateX: 20, transformPerspective: 700 },
+        { y: 0, opacity: 1, clipPath: "inset(0% 0 0 0)", rotateX: 0, duration: 1 },
         "-=0.3"
       )
       .fromTo(".courses-subtitle",
         { y: 30, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.7 },
-        "-=0.3"
+        "-=0.4"
       );
 
-    /* ─── STATS — counter pop ─── */
+    /* ── Stats: bounce pop with stagger ── */
     gsap.fromTo(".stat-item",
-      { y: 40, opacity: 0, scale: 0.8 },
+      { y: 50, opacity: 0, scale: 0.6 },
       {
         y: 0, opacity: 1, scale: 1,
-        duration: 0.6, stagger: 0.1, ease: "back.out(1.5)",
+        duration: 0.7, stagger: 0.1, ease: "back.out(2.2)",
         scrollTrigger: { trigger: ".stats-row", start: "top 85%" },
       }
     );
 
-    /* ─── WHY LEARN — staggered 3D cards ─── */
+    /* ── Why learn cards: 3D flip from bottom ── */
     gsap.fromTo(".why-learn-item",
-      { y: 60, opacity: 0, rotateY: 10, scale: 0.9, transformPerspective: 600 },
+      { y: 70, opacity: 0, rotateX: 18, rotateY: 6, scale: 0.88, transformPerspective: 700 },
       {
-        y: 0, opacity: 1, rotateY: 0, scale: 1,
-        duration: 0.7, stagger: 0.1, ease: "power4.out",
-        scrollTrigger: { trigger: ".why-learn-grid", start: "top 78%" },
+        y: 0, opacity: 1, rotateX: 0, rotateY: 0, scale: 1,
+        duration: 0.75, stagger: { amount: 0.7, from: "start" }, ease: "power4.out",
+        scrollTrigger: { trigger: ".why-learn-grid", start: "top 80%" },
       }
     );
 
-    /* ─── COURSE CARDS — pop with bounce ─── */
+    /* ── Course cards: cascade with depth ── */
     gsap.fromTo(".course-card",
-      { y: 80, opacity: 0, scale: 0.85, rotateX: 10, transformPerspective: 800 },
+      { y: 90, opacity: 0, scale: 0.82, rotateX: 12, transformPerspective: 900 },
       {
         y: 0, opacity: 1, scale: 1, rotateX: 0,
-        duration: 0.7, stagger: 0.12, ease: "back.out(1.3)",
-        scrollTrigger: { trigger: ".courses-grid", start: "top 78%" },
+        duration: 0.8, stagger: { amount: 0.9, from: "start" }, ease: "back.out(1.2)",
+        scrollTrigger: { trigger: ".courses-grid", start: "top 80%" },
       }
     );
 
-    /* ─── CTA ─── */
+    /* ── CTA: scale + glow entrance ── */
     gsap.fromTo(".courses-cta-inner",
-      { y: 50, opacity: 0, scale: 0.95 },
+      { y: 60, opacity: 0, scale: 0.93 },
       {
-        y: 0, opacity: 1, scale: 1, duration: 0.9, ease: "power4.out",
+        y: 0, opacity: 1, scale: 1, duration: 1, ease: "power4.out",
         scrollTrigger: { trigger: ".courses-cta", start: "top 82%" },
       }
     );

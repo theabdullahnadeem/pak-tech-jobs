@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { emitToUser } from "@/lib/socketio";
+import { rateLimitByUser, RATE_LIMITS } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -16,6 +17,9 @@ export async function POST(req: NextRequest) {
       { status: 403 }
     );
   }
+
+  const rl = await rateLimitByUser(session.user.id, RATE_LIMITS.apply);
+  if (rl) return rl;
 
   let body: unknown;
   try {

@@ -27,25 +27,100 @@ export default function HomePage() {
   const featuredResources = resources.slice(0, 3);
 
   useGSAP(() => {
-    /* ─────────── HERO ANIMATIONS ─────────── */
+    gsap.registerPlugin(ScrollTrigger);
+
+    /* ── HERO: word-by-word title reveal + floating orbs ── */
     const heroTl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
-    heroTl.fromTo(".hero-content-inner",
-      { y: 40, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.2 },
-      "+=0.2"
+    heroTl
+      .fromTo(".hero-badge",
+        { y: 30, opacity: 0, scale: 0.8 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: "back.out(2)" }
+      )
+      .fromTo(".hero-title",
+        { y: 60, opacity: 0, clipPath: "inset(100% 0 0 0)" },
+        { y: 0, opacity: 1, clipPath: "inset(0% 0 0 0)", duration: 1, ease: "expo.out" },
+        "-=0.3"
+      )
+      .fromTo(".hero-subtitle",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8 },
+        "-=0.5"
+      )
+      .fromTo(".hero-search",
+        { y: 40, opacity: 0, scale: 0.96 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.4)" },
+        "-=0.4"
+      )
+      .fromTo(".hero-tags",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5 },
+        "-=0.3"
+      );
+
+    /* ── Floating orbs parallax ── */
+    gsap.to(".hero-orb-1", {
+      y: -60, x: 30,
+      scrollTrigger: { trigger: heroRef.current, start: "top top", end: "bottom top", scrub: 2 },
+    });
+    gsap.to(".hero-orb-2", {
+      y: -40, x: -20,
+      scrollTrigger: { trigger: heroRef.current, start: "top top", end: "bottom top", scrub: 1.5 },
+    });
+    gsap.to(".hero-grid",
+      { y: 80, scrollTrigger: { trigger: heroRef.current, start: "top top", end: "bottom top", scrub: 1 } }
     );
 
-    // Hero parallax
-    gsap.to(".hero-bg-layer", {
-      y: 100,
-      scrollTrigger: {
-        trigger: heroRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: 1.5,
-      },
+    /* ── Category cards: staggered 3D flip-in ── */
+    gsap.fromTo(".category-card",
+      { y: 60, opacity: 0, rotateX: 15, scale: 0.88, transformPerspective: 900 },
+      {
+        y: 0, opacity: 1, rotateX: 0, scale: 1,
+        duration: 0.65, stagger: { amount: 0.8, from: "start" }, ease: "back.out(1.3)",
+        scrollTrigger: { trigger: ".categories-grid", start: "top 82%" },
+      }
+    );
+
+    /* ── Trending jobs: slide in from alternating sides ── */
+    gsap.utils.toArray<HTMLElement>(".trending-job-card").forEach((card, i) => {
+      gsap.fromTo(card,
+        { x: i % 2 === 0 ? -60 : 60, opacity: 0, scale: 0.95 },
+        {
+          x: 0, opacity: 1, scale: 1, duration: 0.7, ease: "power3.out",
+          scrollTrigger: { trigger: card, start: "top 88%", toggleActions: "play none none none" },
+        }
+      );
     });
+
+    /* ── Section headings: clip-path reveal ── */
+    gsap.utils.toArray<HTMLElement>(".section-heading-reveal").forEach((el) => {
+      gsap.fromTo(el,
+        { opacity: 0, y: 40, clipPath: "inset(0 0 100% 0)" },
+        {
+          opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.9, ease: "expo.out",
+          scrollTrigger: { trigger: el, start: "top 85%" },
+        }
+      );
+    });
+
+    /* ── Salary/resource cards: scale pop ── */
+    gsap.fromTo(".secondary-card",
+      { y: 50, opacity: 0, scale: 0.9 },
+      {
+        y: 0, opacity: 1, scale: 1,
+        duration: 0.6, stagger: 0.12, ease: "back.out(1.5)",
+        scrollTrigger: { trigger: ".secondary-cards-grid", start: "top 82%" },
+      }
+    );
+
+    /* ── CTA sections: glow pulse on enter ── */
+    gsap.fromTo(".cta-section-inner",
+      { y: 50, opacity: 0, scale: 0.97 },
+      {
+        y: 0, opacity: 1, scale: 1, duration: 0.9, ease: "power4.out",
+        scrollTrigger: { trigger: ".cta-section-inner", start: "top 85%" },
+      }
+    );
 
   }, { scope: containerRef });
 
@@ -57,9 +132,9 @@ export default function HomePage() {
         className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-gray-900 to-cyan-950 text-white pb-16"
       >
         <div className="hero-bg-layer absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
-          <div className="absolute inset-0 opacity-[0.03]" style={{
+          <div className="hero-orb-1 absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
+          <div className="hero-orb-2 absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
+          <div className="hero-grid absolute inset-0 opacity-[0.03]" style={{
             backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
             backgroundSize: "60px 60px",
           }} />
@@ -67,20 +142,23 @@ export default function HomePage() {
 
         <div className="hero-content-inner relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 sm:py-36 lg:py-40">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-black leading-tight mb-6">
+            <span className="hero-badge inline-block px-4 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 text-sm font-medium mb-6 border border-emerald-500/25 backdrop-blur-sm">
+              🇵🇰 Pakistan&apos;s #1 Tech Job Board
+            </span>
+            <h1 className="hero-title text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-black leading-tight mb-6">
               Find Tech Jobs in Pakistan — Remote, Lahore, Karachi &amp; Beyond
             </h1>
             
-            <p className="text-lg sm:text-xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
+            <p className="hero-subtitle text-lg sm:text-xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
               Browse hundreds of software engineering, AI, and IT jobs updated daily. Built for Pakistani developers.
             </p>
 
-            <div className="max-w-2xl mx-auto mb-6">
+            <div className="hero-search max-w-2xl mx-auto mb-6">
               <JobSearchBar />
             </div>
 
             {/* Popular Searches Tag Strip */}
-            <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-gray-400">
+            <div className="hero-tags flex flex-wrap items-center justify-center gap-2 text-sm text-gray-400">
               <span className="font-semibold text-gray-300 mr-2">Popular:</span>
               <Link href="/remote-jobs" className="hover:text-emerald-400 transition-colors">Remote Jobs</Link> <span className="opacity-30">•</span>
               <Link href="/react-jobs-pakistan" className="hover:text-emerald-400 transition-colors">React Jobs</Link> <span className="opacity-30">•</span>
@@ -106,12 +184,12 @@ export default function HomePage() {
       {/* ═══════════ JOB CATEGORIES GRID ═══════════ */}
       <section className="py-20 sm:py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
+          <div className="section-heading-reveal text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Explore Roles by <span className="gradient-text">Category</span>
             </h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="categories-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {/* Hardcoded visual category cards to match the requirements */}
             {[
               { label: "Frontend Development", icon: "🖥️", count: 24, href: "/frontend-jobs" },
@@ -128,7 +206,7 @@ export default function HomePage() {
               <Link 
                 key={cat.label} 
                 href={cat.href}
-                className="group flex flex-col p-6 rounded-2xl border border-border dark:border-border-dark bg-card hover:bg-surface dark:bg-card-dark dark:hover:bg-surface-dark transition-all hover:border-primary/50 hover:shadow-xl hover:-translate-y-1"
+                className="category-card group flex flex-col p-6 rounded-2xl border border-border dark:border-border-dark bg-card hover:bg-surface dark:bg-card-dark dark:hover:bg-surface-dark transition-all hover:border-primary/50 hover:shadow-xl hover:-translate-y-1"
               >
                 <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">
                   {cat.icon}
@@ -148,7 +226,7 @@ export default function HomePage() {
       {/* ═══════════ TRENDING / LATEST JOBS ═══════════ */}
       <section className="py-20 sm:py-24 bg-surface dark:bg-surface-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
+          <div className="section-heading-reveal text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               🔥 Trending Tech Jobs This Week
             </h2>
@@ -159,7 +237,9 @@ export default function HomePage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
             {trendingJobs.map((job) => (
-              <JobCard key={job.id} {...job} />
+              <div key={job.id} className="trending-job-card">
+                <JobCard {...job} />
+              </div>
             ))}
           </div>
           
@@ -202,7 +282,7 @@ export default function HomePage() {
       {/* ═══════════ SECONDARY: FEATURED SEO ARTICLES ═══════════ */}
       <section className="py-20 sm:py-24 bg-surface dark:bg-surface-dark border-y border-border dark:border-border-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
+          <div className="section-heading-reveal text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Career Guides &amp; Salary Insights
             </h2>
@@ -210,12 +290,12 @@ export default function HomePage() {
               Boost your tech career with our comprehensive salary breakdowns and remote work preparation guides.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="secondary-cards-grid grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             {featuredSalaries.map((role) => (
               <Link
                 key={role.slug}
                 href={`/salary/${role.slug}`}
-                className="group p-6 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark hover:border-primary/50 transition-all hover:shadow-xl hover:-translate-y-1"
+                className="secondary-card group p-6 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark hover:border-primary/50 transition-all hover:shadow-xl hover:-translate-y-1"
               >
                 <div className="flex items-center gap-3 mb-4 text-primary">
                   <span className="text-2xl">💼</span>
@@ -239,7 +319,7 @@ export default function HomePage() {
 
       {/* B5: Submit Your Salary CTA */}
       <section className="py-14 bg-background border-t border-border dark:border-border-dark">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="cta-section-inner max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold mb-3">Know Your Salary? Help the Community.</h2>
           <p className="text-muted mb-6 text-lg max-w-xl mx-auto">
             Your anonymous submission helps thousands of Pakistani developers make better career decisions. Takes 2 minutes.

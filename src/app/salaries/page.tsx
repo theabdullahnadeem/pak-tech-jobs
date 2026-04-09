@@ -13,32 +13,40 @@ export default function SalariesPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    // Heading — dramatic entrance
+    /* ── Hero heading: clip-path word reveal ── */
     const headingTl = gsap.timeline({ defaults: { ease: "expo.out" } });
     headingTl
-      .fromTo(".salary-icon-bounce",
-        { scale: 0, rotation: -180 },
-        { scale: 1, rotation: 0, duration: 0.8, ease: "back.out(1.7)" }
-      )
       .fromTo(".salary-heading-text",
-        { y: 40, opacity: 0, clipPath: "inset(100% 0 0 0)" },
-        { y: 0, opacity: 1, clipPath: "inset(0% 0 0 0)", duration: 0.8 },
-        "-=0.4"
+        { y: 60, opacity: 0, clipPath: "inset(100% 0 0 0)" },
+        { y: 0, opacity: 1, clipPath: "inset(0% 0 0 0)", duration: 1 }
       )
       .fromTo(".salary-heading-desc",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6 },
-        "-=0.3"
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.7 },
+        "-=0.4"
       );
 
-    // Cards — 3D perspective stagger
+    /* ── Cards: 3D perspective stagger with depth ── */
     gsap.fromTo(".salary-role-card",
-      { y: 80, opacity: 0, rotateX: 12, scale: 0.9, transformPerspective: 800 },
+      { y: 80, opacity: 0, rotateX: 14, rotateY: -4, scale: 0.88, transformPerspective: 900 },
       {
-        y: 0, opacity: 1, rotateX: 0, scale: 1,
-        duration: 0.7, stagger: 0.1, ease: "power4.out", delay: 0.3,
+        y: 0, opacity: 1, rotateX: 0, rotateY: 0, scale: 1,
+        duration: 0.75, stagger: { amount: 1, from: "start" }, ease: "power4.out",
+        scrollTrigger: { trigger: ".salary-cards-grid", start: "top 82%" },
       }
     );
+
+    /* ── Salary bars animate width on scroll ── */
+    gsap.utils.toArray<HTMLElement>(".salary-bar").forEach((bar) => {
+      const width = bar.getAttribute("data-width") || "0%";
+      gsap.fromTo(bar,
+        { width: "0%" },
+        {
+          width, duration: 1.2, ease: "power3.out",
+          scrollTrigger: { trigger: bar, start: "top 90%" },
+        }
+      );
+    });
   }, { scope: containerRef });
 
   return (
@@ -52,7 +60,7 @@ export default function SalariesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="salary-cards-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {salaryRoles.map((role) => (
           <Link
             key={role.slug}

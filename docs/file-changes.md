@@ -17,6 +17,90 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/lib/rateLimit.ts` — Saved (no code changes) — April 9, 2026
+
+**Summary**
+
+The file `src/lib/rateLimit.ts` was saved with no content changes. The diff was empty. The file implements a sliding-window rate limiter backed by Redis (via `src/lib/redis.ts`) for use in Next.js API route handlers. Its structure:
+
+- Exports a `RateLimitConfig` interface with fields: `prefix` (Redis key namespace), `limit` (max requests per window), `windowSeconds` (window duration), and an optional `message`.
+- Exports `rateLimit(req, config)` — rate-limits by client IP extracted from `x-forwarded-for` or `x-real-ip` headers. Uses a Redis sorted set (ZSET) keyed as `rl:{prefix}:{ip}`. On each call: removes entries older than the window (`ZREMRANGEBYSCORE`), counts remaining entries (`ZCARD`), and either returns a `429 NextResponse` with `X-RateLimit-*` headers (including a `Retry-After` derived from the oldest entry's score) or adds the current request timestamp and returns `null` (allowed). Fails open if Redis is unavailable.
+- Exports `rateLimitByUser(userId, config)` — same sliding-window logic keyed as `rl:{prefix}:user:{userId}` instead of IP. Returns a simpler 429 without `Retry-After` headers.
+- Exports a `RATE_LIMITS` const object with pre-configured profiles: `auth` (10/15 min), `apply` (20/hr), `ai` (10/hr), `messaging` (60/min), `jobPost` (10/hr), `general` (100/min), `referral` (5/day), `interview` (20/hr).
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
+#### `.vscode/settings.json` — Modified — April 9, 2026
+
+**Summary**
+
+The VS Code workspace settings file `.vscode/settings.json` was updated to add a single editor configuration key: `"typescript.autoClosingTags": false`. The file previously contained an empty object `{}`. After the change it contains one entry disabling the automatic insertion of closing tags for TypeScript/TSX files.
+
+**Change**
+
+```diff
+ {
++    "typescript.autoClosingTags": false
+ }
+```
+
+**Reasoning**
+
+VS Code's TypeScript language service automatically inserts a matching closing tag whenever a JSX/TSX opening tag is typed (e.g., typing `<div>` immediately produces `<div></div>` with the cursor placed between the tags). While convenient in some workflows, this behaviour conflicts with snippet-based or paste-heavy editing patterns where the closing tag is already present in the pasted content or snippet expansion — resulting in duplicate closing tags that must be manually deleted. Disabling it gives full manual control over tag insertion.
+
+**Approach**
+
+- **Workspace setting (`.vscode/settings.json`) over user setting**: Placing this in the workspace settings file ensures the behaviour is consistent for all contributors working in this repository, regardless of their personal VS Code user settings. A user-level setting would only affect the individual developer's machine and would not be version-controlled.
+- **`typescript.autoClosingTags: false` over `editor.autoClosingTags`**: The `typescript.autoClosingTags` key is the TypeScript-extension-specific override for JSX/TSX files. The more general `editor.autoClosingTags` controls HTML tag auto-closing across all file types. Using the TypeScript-scoped key limits the change to `.ts`/`.tsx` files only, leaving HTML auto-closing behaviour unaffected in `.html` files.
+
+---
+
+#### `package.json` — Modified — April 7, 2026
+
+**Summary**
+
+The `package.json` scripts section was updated to restore the `postinstall` lifecycle hook. The `"postinstall": "prisma generate"` script was re-added as the last entry in the `"scripts"` object, alongside the existing `"test": "vitest run"` entry (which also had its trailing comma restored as part of valid JSON syntax).
+
+Before:
+```json
+"test": "vitest run"
+```
+
+After:
+```json
+"test": "vitest run",
+"postinstall": "prisma generate"
+```
+
+All other fields — `name`, `version`, `private`, `dependencies`, `devDependencies` — remain unchanged.
+
+**Change**
+
+```diff
+-    "test": "vitest run"
++    "test": "vitest run",
++    "postinstall": "prisma generate"
+```
+
+**Reasoning**
+
+The `postinstall` npm lifecycle script runs automatically after every `npm install` (and `npm ci`) invocation. In this project it executes `prisma generate`, which regenerates the Prisma Client TypeScript types from `prisma/schema.prisma`. Without this hook, any environment that installs dependencies from scratch — a fresh developer machine, a CI pipeline, a Docker build, or a Fly.io deployment — will have an outdated or missing Prisma Client, causing TypeScript type errors and runtime failures on any import of `@prisma/client`.
+
+The script was previously present (it is referenced in the `Dockerfile` and expected by the deployment pipeline on Fly.io) and appears to have been accidentally dropped during a prior edit to `package.json`. Restoring it ensures that `prisma generate` runs automatically in all install contexts without requiring a manual step.
+
+**Approach**
+
+- **`postinstall` over a separate `prepare` script**: npm's `postinstall` hook fires after `npm install` in all contexts including production installs (`npm install --omit=dev`). The `prepare` hook also runs after install but additionally runs before `npm publish` and after `git clone` with npm workspaces — neither of which applies here. `postinstall` is the more targeted and conventional choice for post-install code generation steps.
+- **`prisma generate` rather than `prisma migrate deploy`**: `prisma generate` only regenerates the TypeScript client from the schema — it is a pure code-generation step with no database side effects and no network requirements. `prisma migrate deploy` applies pending migrations and requires a live database connection, which is not appropriate for a generic `postinstall` hook that runs in environments where the database may not be reachable (e.g., during a `npm install` in a CI lint job or a local dependency update).
+- **Placement as the last script entry**: `postinstall` is placed after `test` to keep the scripts in a logical reading order: development commands first (`dev`, `dev:server`), build/start next (`build`, `start`), tooling after (`lint`, `test`), and lifecycle hooks last (`postinstall`). This ordering makes the scripts section easier to scan.
+- **Restoring the trailing comma on `"test"`**: JSON requires commas between all object entries except the last. Adding `"postinstall"` after `"test"` makes `"test"` no longer the last entry, so its trailing comma is required for valid JSON. The edit correctly adds both the comma and the new entry in a single change.
+
+---
+
 #### `src/lib/auth.ts` — Modified — April 7, 2026
 
 **Summary**

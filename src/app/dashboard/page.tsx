@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { io, Socket } from "socket.io-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -393,6 +394,34 @@ export default function DashboardPage() {
             Hey {userName} — here&apos;s where all your applications stand.
           </p>
         </div>
+
+        {/* Nav links */}
+        <nav className="flex flex-wrap gap-2 mb-8">
+          <Link
+            href="/dashboard/saved-jobs"
+            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+          >
+            🔖 Saved Jobs
+          </Link>
+          <Link
+            href="/dashboard/job-alerts"
+            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+          >
+            🔔 Job Alerts
+          </Link>
+          <Link
+            href="/dashboard/interviews"
+            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+          >
+            📅 Interviews
+          </Link>
+          <Link
+            href="/dashboard/analytics"
+            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+          >
+            📊 Analytics
+          </Link>
+        </nav>
 
         {/* Content */}
         {loading ? (

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { emitToUser, getSocketIO } from "@/lib/socketio";
+import { rateLimitByUser, RATE_LIMITS } from "@/lib/rateLimit";
 
 // POST /api/messages — Send a message in a thread
 // Requirements: 8.1, 8.2, 8.3, 8.4
@@ -11,6 +12,9 @@ export async function POST(req: NextRequest) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rl = await rateLimitByUser(session.user.id, RATE_LIMITS.messaging);
+  if (rl) return rl;
 
   let body: unknown;
   try {
