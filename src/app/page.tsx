@@ -7,7 +7,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import JobSearchBar from "@/components/JobSearchBar";
 import StatsBar from "@/components/StatsBar";
-import JobCard from "@/components/JobCard";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import ResumeReviewCTA from "@/components/ResumeReviewCTA";
 import { salaryRoles } from "@/data/salaries";
@@ -253,7 +252,27 @@ export default function HomePage() {
             ) : (
               trendingJobs.map((job) => (
                 <div key={job.id} className="trending-job-card">
-                  <JobCard {...job} />
+                  <Link href={`/jobs/${job.id}`}
+                    className="group flex flex-col p-5 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-10 h-10 shrink-0 rounded-xl border border-border dark:border-border-dark bg-surface dark:bg-surface-dark flex items-center justify-center text-base font-bold text-muted">
+                        {(job.recruiter.companyName || job.recruiter.name).charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{job.title}</h3>
+                        <p className="text-sm text-muted truncate">{job.recruiter.companyName || job.recruiter.name} · {job.city}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {job.skills.slice(0, 3).map(s => (
+                        <span key={s} className="rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium">{s}</span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted mt-auto pt-3 border-t border-border dark:border-border-dark">
+                      <span>{job.jobType.replace("_", " ")} · {job.experienceLevel}</span>
+                      <span className="font-medium text-foreground">PKR {job.salaryMin.toLocaleString()}+</span>
+                    </div>
+                  </Link>
                 </div>
               ))
             )}
