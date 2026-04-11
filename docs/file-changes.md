@@ -17,6 +17,24 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/components/CategoryJobsPage.tsx` — Saved (no code changes) — April 11, 2026
+
+**Summary**
+
+The file `src/components/CategoryJobsPage.tsx` was saved with no code changes. It defines the `CategoryJobsPage` reusable client component used by category-specific job listing pages (e.g., Frontend, Backend, AI/ML). The component accepts `title`, `description`, `apiParams`, `initialLocation`, `seoText`, and `seoHeading` props. On mount it fetches jobs from `/api/jobs?{apiParams}` and renders: a gradient hero section with a `JobSearchBar`, a job count header, a skeleton pulse loader while fetching, an empty-state panel if no jobs are found, or a list of job cards showing company avatar, title, verified badge, location (remote or city), salary range (PKR), skills chips (up to 4 + overflow count), and a relative timestamp via `timeAgo`. A static SEO text block is rendered at the bottom.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+File was saved by the editor (auto-save, format-on-save, or manual Ctrl+S) with no actual edits. Content is identical to its prior state.
+
+---
+
 #### `src/components/Logo.tsx` — Saved (no code changes) — April 11, 2026
 
 **Summary**
