@@ -23,8 +23,15 @@
   --foreground: #0f172a;
 }
 
+/* Dark mode via .dark class (set by ThemeProvider) */
+.dark {
+  --background: #030712;
+  --foreground: #f1f5f9;
+}
+
+/* Fallback: system preference when no class is set */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #030712;
     --foreground: #f1f5f9;
   }
@@ -118,11 +125,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@media (prefers-color-scheme: light) {
-  .glass {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-  }
+:root:not(.dark) .glass {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 /* Gradient text */

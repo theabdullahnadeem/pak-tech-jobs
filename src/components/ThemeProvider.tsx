@@ -20,36 +20,42 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
+function applyTheme(t: Theme): "light" | "dark" {
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDark = t === "dark" || (t === "system" && prefersDark);
+  document.documentElement.classList.toggle("dark", isDark);
+  document.documentElement.classList.toggle("light", !isDark);
+  return isDark ? "dark" : "light";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
 
+  // On mount, read stored preference and apply
   useEffect(() => {
     const stored = (localStorage.getItem("theme") as Theme) || "system";
     setThemeState(stored);
-    applyTheme(stored);
+    setResolvedTheme(applyTheme(stored));
   }, []);
 
-  function applyTheme(t: Theme) {
-    const root = document.documentElement;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = t === "dark" || (t === "system" && prefersDark);
-    root.classList.toggle("dark", isDark);
-    setResolvedTheme(isDark ? "dark" : "light");
-  }
+  // Listen for system preference changes when theme is "system"
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => {
+      if (theme === "system") {
+        setResolvedTheme(applyTheme("system"));
+      }
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [theme]);
 
   function setTheme(t: Theme) {
     setThemeState(t);
     localStorage.setItem("theme", t);
-    applyTheme(t);
+    setResolvedTheme(applyTheme(t));
   }
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => { if (theme === "system") applyTheme("system"); };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>

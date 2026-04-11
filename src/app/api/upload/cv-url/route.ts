@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (session.user.role !== "RECRUITER") {
+  if (session.user.role !== "RECRUITER" && session.user.role !== "APPLICANT") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

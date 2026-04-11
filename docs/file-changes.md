@@ -17,6 +17,59 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/api/upload/cv-url/route.ts` — Saved (no code changes) — April 11, 2026
+
+**Summary**
+
+The file `src/app/api/upload/cv-url/route.ts` was saved with no content changes. The diff was empty. The file implements a `GET /api/upload/cv-url` route handler that generates a signed Cloudinary URL for downloading a stored CV/resume file. Its current structure:
+
+- Requires an authenticated session (`auth()`); returns `401` if no session is present.
+- Restricts access to `RECRUITER` and `APPLICANT` roles; returns `403` for all other roles.
+- Reads a `publicId` query parameter from the request URL; returns `400` if absent.
+- Calls `cloudinary.url(publicId, { resource_type: "raw", type: "upload", sign_url: true, expires_at: now + 3600 })` to produce a signed URL valid for one hour.
+- Returns `{ url }` on success, or a `500` JSON error if Cloudinary URL generation throws.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
+#### `src/app/page.tsx` — Saved (no code changes) — April 11, 2026
+
+**Summary**
+
+The file `src/app/page.tsx` was saved with no content changes. The diff was empty. The file is the root landing page (`/`) of the PakTechJobs Next.js application. It exports the `HomePage` component, which renders the full public-facing homepage. Its current structure:
+
+- **Hero section**: Full-width gradient banner with animated badge, `h1` title, subtitle, `JobSearchBar` component, popular-search tag strip, and a trust tagline. GSAP animations drive a word-by-word title reveal, floating parallax orbs, and a background grid.
+- **Stats bar**: `StatsBar` component rendered immediately below the hero.
+- **Job categories grid**: 10 hardcoded category cards (Frontend, Backend, Full Stack/MERN, AI/ML, Mobile, DevOps, Cybersecurity, UI/UX, Internships, Remote) with emoji icons, job counts, and links to category pages. Cards animate in with a staggered 3D flip-in on scroll.
+- **Trending jobs section**: Fetches up to 6 jobs from `GET /api/jobs?limit=6` on mount and renders them as alternating slide-in cards. Shows a skeleton pulse loader while fetching.
+- **Resume Review CTA**: `ResumeReviewCTA` component in a padded section.
+- **Hiring partners strip**: Placeholder company logo strip (6 items) with grayscale-to-colour hover transition.
+- **Career guides & salary insights**: Three featured salary role cards from a `salaryRoles` constant, linking to `/salary/{slug}`, plus a "View all career guides" link.
+- **Submit Your Salary CTA**: Standalone CTA section linking to `/contact?subject=Salary+Data+Submission`.
+- **Newsletter signup**: `NewsletterSignup` component at the bottom.
+- **GSAP animations**: `useGSAP` hook (scoped to `containerRef`) registers `ScrollTrigger` and drives: hero timeline, floating orb parallax, category card staggered flip-in, trending job card alternating slide-in, section heading clip-path reveals, secondary card scale-pop, and CTA section entrance.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
 #### `prisma/schema.prisma` — Saved (no code changes) — April 11, 2026
 
 **Summary**
