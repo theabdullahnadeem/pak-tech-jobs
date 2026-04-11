@@ -171,7 +171,11 @@ export default function MessagingPanel({
 
   // Socket.io real-time events
   useEffect(() => {
-    const socket = io(window.location.origin, { path: "/api/socketio" });
+    const socket = io(window.location.origin, {
+      path: "/api/socketio",
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
     socketRef.current = socket;
 
     socket.on("message:new", ({ threadId: tid, message }: { threadId: string; message: Message }) => {

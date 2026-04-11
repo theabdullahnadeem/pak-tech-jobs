@@ -177,6 +177,7 @@ export async function GET(_req: NextRequest) {
           stage: true,
           submittedAt: true,
           updatedAt: true,
+          isWithdrawn: true,
           rejectionReason: true,
           recruiterNotes: true,
           jobPost: {

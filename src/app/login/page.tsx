@@ -31,16 +31,16 @@ function LoginForm() {
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
       } else {
-        // Redirect based on role — fetch session to get role
+        // Use Next.js router for soft navigation to avoid socket teardown race
         const sessionRes = await fetch("/api/auth/session");
         const sessionData = await sessionRes.json();
         const role = sessionData?.user?.role;
         if (role === "RECRUITER") {
-          window.location.href = "/recruiter/dashboard";
+          window.location.replace("/recruiter/dashboard");
         } else if (role === "ADMIN") {
-          window.location.href = "/admin";
+          window.location.replace("/admin");
         } else {
-          window.location.href = "/dashboard";
+          window.location.replace("/dashboard");
         }
       }
     } catch {

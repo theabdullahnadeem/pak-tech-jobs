@@ -104,7 +104,11 @@ export default function JobsPage() {
 
   // Socket.io: listen for jobs:count_updated
   useEffect(() => {
-    const socket = io(window.location.origin, { path: "/api/socketio" });
+    const socket = io(window.location.origin, {
+      path: "/api/socketio",
+      reconnectionAttempts: 3,
+      reconnectionDelay: 3000,
+    });
     socketRef.current = socket;
 
     socket.on("jobs:count_updated", ({ activeCount }: { activeCount: number }) => {

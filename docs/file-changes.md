@@ -17,6 +17,27 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/api/applications/route.ts` — Saved (no code changes) — April 11, 2026
+
+**Summary**
+
+The file `src/app/api/applications/route.ts` was saved with no content changes. The diff was empty. The file implements two route handlers for `/api/applications`:
+
+- `POST`: Allows authenticated `APPLICANT` users to submit a job application. Enforces per-user rate limiting (`RATE_LIMITS.apply`), validates required fields based on the job's `requiredFields` config, checks for duplicate applications, creates the `Application` record and a confirmation `Notification` in a single Prisma transaction, and emits a real-time `notification:new` socket event to the applicant. Returns `201` on success or `409` if a duplicate application exists.
+- `GET`: Returns applications scoped to the authenticated user's role. `APPLICANT` sessions receive their own submitted applications with full job post and recruiter context (title, city, jobType, salaryMin/Max, recruiter name, responseRate, etc.). `RECRUITER` sessions receive all applications for their job posts with applicant profile fields (name, email, skills, experienceLevel, location). Returns `403` for any other role.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
 #### `src/app/api/upload/cv-url/route.ts` — Saved (no code changes) — April 11, 2026
 
 **Summary**

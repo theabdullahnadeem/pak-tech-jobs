@@ -293,6 +293,7 @@ function SkeletonCard() {
 
 function ApplicationCard({ app, onViewDetail, onWithdraw }: { app: Application; onViewDetail: (id: string) => void; onWithdraw: (id: string) => void }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const { jobPost } = app;
   if (!jobPost || !jobPost.recruiter) return null;
   const companyName = jobPost.recruiter.companyName ?? jobPost.recruiter.name;
@@ -383,12 +384,30 @@ function ApplicationCard({ app, onViewDetail, onWithdraw }: { app: Application; 
           View submitted details →
         </button>
         {!app.isWithdrawn && !["OFFER","REJECTED","EXPIRED"].includes(app.stage) && (
-          <button
-            onClick={() => onWithdraw(app.id)}
-            className="text-xs text-red-400 hover:text-red-300 hover:underline"
-          >
-            Withdraw
-          </button>
+          confirmWithdraw ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted">Withdraw?</span>
+              <button
+                onClick={() => { onWithdraw(app.id); setConfirmWithdraw(false); }}
+                className="text-xs text-red-400 hover:text-red-300 font-medium"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmWithdraw(false)}
+                className="text-xs text-muted hover:text-foreground"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmWithdraw(true)}
+              className="text-xs text-red-400 hover:text-red-300 hover:underline"
+            >
+              Withdraw
+            </button>
+          )
         )}
         {app.isWithdrawn && (
           <span className="text-xs text-muted italic">Withdrawn</span>
@@ -500,10 +519,15 @@ export default function DashboardPage() {
   }, []);
 
   // Socket.io: real-time stage updates
+  const sessionUserId = session?.user?.id;
   useEffect(() => {
-    if (!session?.user) return;
+    if (!sessionUserId) return;
 
-    const socket = io(window.location.origin, { path: "/api/socketio" });
+    const socket = io(window.location.origin, {
+      path: "/api/socketio",
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
     socketRef.current = socket;
 
     socket.on(
@@ -525,7 +549,6 @@ export default function DashboardPage() {
 
     socket.on("connect", () => {
       setSocketConnected(true);
-      // Reconcile missed events on reconnect
       fetch("/api/applications")
         .then(r => r.json())
         .then((data: Application[]) => { if (Array.isArray(data)) setApplications(data); })
@@ -537,12 +560,11 @@ export default function DashboardPage() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [session?.user]);
+  }, [sessionUserId]);
 
   const userName = session?.user?.name ?? "there";
 
   const handleWithdraw = async (id: string) => {
-    if (!confirm("Are you sure you want to withdraw this application?")) return;
     const res = await fetch(`/api/applications/${id}/withdraw`, { method: "POST" });
     if (res.ok) {
       setApplications(prev => prev.map(a => a.id === id ? { ...a, isWithdrawn: true } : a));

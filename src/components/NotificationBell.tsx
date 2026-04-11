@@ -44,7 +44,11 @@ export default function NotificationBell() {
 
   useEffect(() => {
     if (!userId) return;
-    const socket = io(window.location.origin, { path: "/api/socketio" });
+    const socket = io(window.location.origin, {
+      path: "/api/socketio",
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
     socketRef.current = socket;
     socket.on("notification:new", (notification: Notification) => {
       setNotifications((prev) => [notification, ...prev].slice(0, 20));

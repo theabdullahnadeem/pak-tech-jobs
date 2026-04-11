@@ -48,33 +48,37 @@ app.prepare().then(async () => {
 
   // Authenticate socket connections via NextAuth JWT session
   io.use(async (socket, next) => {
+    // Auth is optional — unauthenticated sockets can still receive public events
+    // User-specific events are scoped to rooms joined after connection
     const token = socket.handshake.auth?.token as string | undefined;
-    if (!token) {
-      return next(new Error("Authentication required"));
-    }
-    try {
-      const { decode } = await import("next-auth/jwt");
-      const decoded = await decode({
-        token,
-        secret: process.env.NEXTAUTH_SECRET!,
-        salt:
-          process.env.NODE_ENV === "production"
-            ? "__Secure-authjs.session-token"
-            : "authjs.session-token",
-      });
-      if (!decoded?.sub) {
-        return next(new Error("Invalid session"));
+    if (token) {
+      try {
+        const { decode } = await import("next-auth/jwt");
+        const decoded = await decode({
+          token,
+          secret: process.env.NEXTAUTH_SECRET!,
+          salt:
+            process.env.NODE_ENV === "production"
+              ? "__Secure-authjs.session-token"
+              : "authjs.session-token",
+        });
+        if (decoded?.sub) {
+          socket.data.userId = decoded.sub;
+          socket.data.role = decoded.role as string;
+        }
+      } catch {
+        // Invalid token — allow connection but without userId
       }
-      socket.data.userId = decoded.sub;
-      socket.data.role = decoded.role as string;
-      next();
-    } catch {
-      next(new Error("Authentication failed"));
     }
+    next();
   });
 
   io.on("connection", async (socket) => {
-    const userId = socket.data.userId as string;
+    const userId = socket.data.userId as string | undefined;
+    if (!userId) {
+      // Unauthenticated connection — only receives public broadcasts
+      return;
+    }
     socket.join(`user:${userId}`);
     console.log(`[Socket.io] User ${userId} connected`);
 
