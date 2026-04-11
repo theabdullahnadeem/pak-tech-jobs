@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import NotificationBell from "./NotificationBell";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
 
 const navLinks = [
   { href: "/salaries", label: "Salaries" },
@@ -29,11 +30,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl">🚀</span>
-            <span className="font-bold text-lg gradient-text group-hover:opacity-80 transition-opacity">
-              PakTechJobs
-            </span>
+          <Link href="/" className="flex items-center group">
+            <Logo size="md" className="group-hover:opacity-85 transition-opacity" />
           </Link>
 
           {/* Desktop Nav */}

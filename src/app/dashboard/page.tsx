@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { io, Socket } from "socket.io-client";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -304,7 +306,7 @@ function ApplicationCard({ app, onViewDetail, onWithdraw }: { app: Application; 
     app.stage === "REJECTED" && app.rejectionReason != null;
 
   return (
-    <div className="rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark p-6 transition-all duration-200 hover:shadow-lg hover:border-primary/40">
+    <div className="rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark p-6 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/40 hover:-translate-y-0.5">
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
         <div className="w-11 h-11 flex-shrink-0 rounded-xl border border-border dark:border-border-dark bg-surface dark:bg-surface-dark flex items-center justify-center">
@@ -506,6 +508,20 @@ export default function DashboardPage() {
   const [socketConnected, setSocketConnected] = useState(true);
   const [detailAppId, setDetailAppId] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Header entrance
+    gsap.fromTo(".dash-header",
+      { y: 40, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: "expo.out" }
+    );
+    // Nav pills stagger
+    gsap.fromTo(".dash-nav-link",
+      { y: 20, opacity: 0, scale: 0.9 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.07, ease: "back.out(1.5)", delay: 0.3 }
+    );
+  }, { scope: containerRef, dependencies: [] });
 
   // Fetch applications on mount
   useEffect(() => {
@@ -572,11 +588,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+    <div ref={containerRef} className="min-h-screen bg-background pt-24 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="dash-header mb-8">
           <h1 className="text-3xl font-bold tracking-tight">
             My Applications
           </h1>
@@ -589,31 +605,31 @@ export default function DashboardPage() {
         <nav className="flex flex-wrap gap-2 mb-8">
           <Link
             href="/dashboard/saved-jobs"
-            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+            className="dash-nav-link rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
           >
             🔖 Saved Jobs
           </Link>
           <Link
             href="/dashboard/job-alerts"
-            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+            className="dash-nav-link rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
           >
             🔔 Job Alerts
           </Link>
           <Link
             href="/dashboard/interviews"
-            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+            className="dash-nav-link rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
           >
             📅 Interviews
           </Link>
           <Link
             href="/dashboard/analytics"
-            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+            className="dash-nav-link rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
           >
             📊 Analytics
           </Link>
           <Link
             href="/dashboard/profile"
-            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+            className="dash-nav-link rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
           >
             👤 My Profile
           </Link>
