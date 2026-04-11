@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -39,4 +39,40 @@ export async function GET() {
   }
 
   return NextResponse.json(user);
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const { name, bio, portfolioUrl, avatarPublicId, profileSlug, openToOpportunities, skills, experienceLevel, location, targetRoles, themePreference } = body;
+
+  // Validate profileSlug uniqueness if provided
+  if (profileSlug) {
+    const existing = await prisma.user.findUnique({ where: { profileSlug }, select: { id: true } });
+    if (existing && existing.id !== session.user.id) {
+      return NextResponse.json({ error: "Profile slug already taken" }, { status: 409 });
+    }
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      ...(name !== undefined && { name }),
+      ...(bio !== undefined && { bio }),
+      ...(portfolioUrl !== undefined && { portfolioUrl }),
+      ...(avatarPublicId !== undefined && { avatarPublicId }),
+      ...(profileSlug !== undefined && { profileSlug }),
+      ...(openToOpportunities !== undefined && { openToOpportunities }),
+      ...(skills !== undefined && { skills }),
+      ...(experienceLevel !== undefined && { experienceLevel }),
+      ...(location !== undefined && { location }),
+      ...(targetRoles !== undefined && { targetRoles }),
+      ...(themePreference !== undefined && { themePreference }),
+    },
+    select: { id: true, name: true, bio: true, portfolioUrl: true, profileSlug: true, openToOpportunities: true, skills: true, experienceLevel: true, location: true, targetRoles: true, themePreference: true },
+  });
+
+  return NextResponse.json(updated);
 }

@@ -17,6 +17,194 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `prisma/schema.prisma` — Saved (no code changes) — April 11, 2026
+
+**Summary**
+
+The file `prisma/schema.prisma` was saved with no content changes. The diff was empty. The file defines the full Prisma data model for the application's PostgreSQL database. Its current structure:
+
+- **Generator**: `prisma-client-js` with `engineType = "library"`.
+- **Datasource**: PostgreSQL via `DATABASE_URL` environment variable.
+- **Enums**: `Role` (`APPLICANT`, `RECRUITER`, `ADMIN`), `PipelineStage` (7 values: `APPLIED` through `EXPIRED`), `RejectionReason` (5 values), `JobType` (5 values), `ExperienceLevel` (4 values), `NotificationType` (17 values), `VerificationStatus` (4 values), `InterviewStatus` (5 values), `VerificationMethod` (3 values), `ReviewType` (2 values).
+- **Models**: `User` (applicant + recruiter fields, 2FA, theme preference, skill verification, 20+ relations), `JobPost` (with city/jobType/experienceLevel indexes), `Application` (with SLA tracking fields and `isWithdrawn`), `MessageThread`, `Message`, `Notification`, `SalaryEntry`, `HeadhuntOutreach`, `DemandSnapshot`, `SavedJob`, `JobAlert`, `InterviewSlot`, `Referral`, `SkillVerification`, `Review`.
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
+#### `src/app/api/applications/[id]/route.ts` — Modified — April 11, 2026
+
+**Summary**
+
+The `GET /api/applications/[id]` handler was updated to allow both `RECRUITER` and `APPLICANT` roles to fetch a full application record, replacing the previous recruiter-only access control. Changes:
+
+- Removed the early `role !== "RECRUITER"` guard that returned `403` for all non-recruiter sessions.
+- Replaced the single ownership check (`application.jobPost.recruiterId !== session.user.id`) with two role-branched checks: recruiters are verified as the job post owner; applicants are verified as the submitter of the application.
+- Added a final fallback `403` for any authenticated session that is neither `RECRUITER` nor `APPLICANT`.
+- Extended the `jobPost` Prisma select to include `city`, `jobType`, `experienceLevel`, `salaryMin`, `salaryMax`, and a nested `recruiter` select (`id`, `name`, `companyName`).
+
+**Change**
+
+```diff
+-/**
+- * GET /api/applications/[id]
+- *
+- * Returns full application details for a recruiter.
+- * - Requires authenticated RECRUITER who owns the job post.
+- * - Returns all submitted applicant fields including CV info.
++/**
++ * GET /api/applications/[id]
++ *
++ * Returns full application details.
++ * - RECRUITER: must own the job post.
++ * - APPLICANT: must be the applicant who submitted the application.
+  *
+  * Requirements: 4.1, 4.3
+  */
+-  if (session.user.role !== "RECRUITER") {
+-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+-  }
+ 
+         id: true,
+         title: true,
+         recruiterId: true,
++        city: true,
++        jobType: true,
++        experienceLevel: true,
++        salaryMin: true,
++        salaryMax: true,
++        recruiter: {
++          select: { id: true, name: true, companyName: true },
++        },
+ 
+-  if (application.jobPost.recruiterId !== session.user.id) {
+-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
++  if (session.user.role === "RECRUITER") {
++    if (application.jobPost.recruiterId !== session.user.id) {
++      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
++    }
++    return NextResponse.json(application);
+   }
+-  return NextResponse.json(application);
++  if (session.user.role === "APPLICANT") {
++    if (application.applicant.id !== session.user.id) {
++      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
++    }
++    return NextResponse.json(application);
++  }
++  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+```
+
+**Reasoning**
+
+The route previously served only recruiters, but applicants also need to view their own application details — for example, to display a submitted application summary page on the applicant dashboard. Extending access to `APPLICANT` sessions (scoped to their own application) enables this without exposing other applicants' data. The additional `jobPost` fields (`city`, `jobType`, `experienceLevel`, `salaryMin`, `salaryMax`, `recruiter`) are needed by the applicant-facing view to render a complete job context alongside the application status.
+
+**Approach**
+
+- **Role-branched checks over a unified ownership check**: Recruiter and applicant ownership are expressed on different fields (`jobPost.recruiterId` vs `applicant.id`). Branching by role first keeps each check simple and explicit, and makes it straightforward to add role-specific response shaping in the future (e.g., redacting fields for applicants that recruiters can see).
+- **Fallback `403` for unrecognised roles**: An explicit final `return 403` ensures that any session with a role other than `RECRUITER` or `APPLICANT` (e.g., `ADMIN`) is denied rather than accidentally permitted by a missing branch.
+
+---
+
+#### `src/app/dashboard/analytics/page.tsx` — Modified — April 9, 2026
+
+**Summary**
+
+The `ApplicantAnalyticsPage` component received a responsive layout and mobile-optimisation pass. Changes span padding, font sizes, chart dimensions, and the stage distribution panel:
+
+- **Top-level container**: `px-6 py-8` → `px-4 sm:px-6 py-6 sm:py-8`; heading margin `mb-8` → `mb-6`; heading size `text-2xl` → `text-xl sm:text-2xl`.
+- **KPI cards grid**: gap `gap-4` → `gap-3 sm:gap-4`; margin `mb-8` → `mb-6`; card padding `p-4` → `p-3 sm:p-4`; value size `text-2xl` → `text-xl sm:text-2xl`; "Offers Received" label shortened to "Offers"; `leading-tight` added to label.
+- **Charts grid**: gap `gap-6` → `gap-4 sm:gap-6`.
+- **Application Timeline chart**: section heading changed from "Application Timeline" to "Timeline"; `ResponsiveContainer` height `220` → `200`; `margin={{ left: -10, right: 8 }}` added to `LineChart`; axis and tooltip font sizes reduced to `10`/`12`.
+- **Stage Distribution panel**: heading changed from "Application Stages" to "Application Stages" (unchanged); empty-state guard added (`stageData.length === 0` → renders "No data yet"); pie chart replaced with a fixed-size `120×120` `div` wrapper (instead of `width="50%"`) containing a donut chart (`innerRadius={28}`, `outerRadius={55}`); legend items gained `min-w-0`, `truncate`, and `shrink-0` utilities; gap reduced from `gap-4` to `gap-3`.
+- **Skills in Demand panel**: heading shortened from "Skills in Demand (from your applications)" to "Skills in Demand"; empty-state guard added; `YAxis` width reduced from `80` to `72`; axis font sizes reduced to `10`; `margin={{ left: 0, right: 8 }}` added.
+- **Recent Applications panel**: `gap-2` added to each row's flex container; company name `<p>` gained `truncate`; status badge `ml-2` removed (gap handles spacing).
+- **`PIE_COLORS` constant**: whitespace-only change (spaces removed between array values).
+
+**Change**
+
+```diff
+-const PIE_COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#6b7280", "#374151"];
+-
++const PIE_COLORS = ["#10b981","#3b82f6","#8b5cf6","#f59e0b","#ef4444","#6b7280","#374151"];
++
+-    <div className="min-h-screen bg-gray-950 px-6 py-8">
+-      <div className="mb-8">
+-        <h1 className="text-2xl font-bold text-white">My Job Search Analytics</h1>
++    <div className="min-h-screen bg-gray-950 px-4 sm:px-6 py-6 sm:py-8">
++      <div className="mb-6">
++        <h1 className="text-xl sm:text-2xl font-bold text-white">My Job Search Analytics</h1>
+ ...
+-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
++      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
+ ...
+-          { label: "Offers Received", value: data.offersReceived },
++          { label: "Offers", value: data.offersReceived },
+ ...
+-          <div key={kpi.label} className="rounded-xl border border-white/10 bg-gray-900 p-4">
+-            <p className="text-xs text-gray-400">{kpi.label}</p>
+-            <p className="mt-1 text-2xl font-bold text-white">{kpi.value}</p>
++          <div key={kpi.label} className="rounded-xl border border-white/10 bg-gray-900 p-3 sm:p-4">
++            <p className="text-xs text-gray-400 leading-tight">{kpi.label}</p>
++            <p className="mt-1 text-xl sm:text-2xl font-bold text-white">{kpi.value}</p>
+ ...
+-        {/* Application Timeline */}
+-        <div className="rounded-xl border border-white/10 bg-gray-900 p-5">
++        {/* Timeline */}
++        <div className="rounded-xl border border-white/10 bg-gray-900 p-4 sm:p-5">
+ ...
+-          <ResponsiveContainer width="100%" height={220}>
+-            <LineChart data={data.applicationTimeline}>
++          <ResponsiveContainer width="100%" height={200}>
++            <LineChart data={data.applicationTimeline} margin={{ left: -10, right: 8 }}>
+ ...
+-          <div className="flex items-center gap-4">
+-            <ResponsiveContainer width="50%" height={180}>
+-              <PieChart>
+-                <Pie ... outerRadius={70}>
++          {stageData.length === 0 ? (
++            <p className="text-sm text-gray-500">No data yet</p>
++          ) : (
++            <div className="flex items-center gap-3">
++              <div className="shrink-0" style={{ width: 120, height: 120 }}>
++                <ResponsiveContainer width="100%" height="100%">
++                  <PieChart>
++                    <Pie ... outerRadius={55} innerRadius={28}>
+ ...
+-        <div className="rounded-xl border border-white/10 bg-gray-900 p-5">
+-          <h2 className="mb-4 text-sm font-semibold text-white">Skills in Demand (from your applications)</h2>
+-          <ResponsiveContainer width="100%" height={220}>
+-            <BarChart data={data.topSkillsInDemand} layout="vertical">
+-              <XAxis type="number" tick={{ fill: "#9ca3af", fontSize: 11 }} />
+-              <YAxis dataKey="skill" type="category" tick={{ fill: "#9ca3af", fontSize: 11 }} width={80} />
++        <div className="rounded-xl border border-white/10 bg-gray-900 p-4 sm:p-5">
++          <h2 className="mb-4 text-sm font-semibold text-white">Skills in Demand</h2>
++          {data.topSkillsInDemand.length === 0 ? (
++            <p className="text-sm text-gray-500">Apply to jobs to see skill insights</p>
++          ) : (
++            <ResponsiveContainer width="100%" height={220}>
++              <BarChart data={data.topSkillsInDemand} layout="vertical" margin={{ left: 0, right: 8 }}>
++                <XAxis type="number" tick={{ fill: "#9ca3af", fontSize: 10 }} />
++                <YAxis dataKey="skill" type="category" tick={{ fill: "#9ca3af", fontSize: 10 }} width={72} />
+```
+
+**Reasoning**
+
+The analytics page was previously designed for desktop viewports only. On small screens the fixed padding, large font sizes, and `width="50%"` pie chart caused layout overflow and cramped rendering. This edit applies Tailwind's responsive prefix pattern (`sm:`) throughout to scale spacing and typography up on larger screens while keeping the mobile layout compact. The pie chart's `width="50%"` was replaced with a fixed `120×120` pixel container because `ResponsiveContainer` with a percentage width inside a flex child can produce zero-width renders on some mobile browsers when the flex container's width is not yet resolved.
+
+Empty-state guards were added to the stage distribution and skills panels to prevent rendering empty charts (which display as blank white areas) when a user has no application data yet.
+
+**Approach**
+
+- **Fixed-size `div` wrapper for the donut chart over `width="50%"` `ResponsiveContainer`**: Recharts' `ResponsiveContainer` with `width="50%"` relies on the parent flex item having a resolved width at paint time. On mobile, flex containers may not have a resolved width during the first render pass, causing the chart to collapse to zero width. A fixed `120×120` pixel `div` with its own `ResponsiveContainer width="100%"` guarantees a stable render regardless of parent layout state.
+- **Donut chart (`innerRadius={28}`) over solid pie**: The inner cutout reduces visual density on the smaller `120×120` canvas, making the colour segments easier to distinguish at small sizes. It also creates space that could be used for a centre label in a future iteration.
+- **`sm:` prefix pattern over separate mobile/desktop components**: Using Tailwind's responsive prefixes keeps all layout variants co-located in a single JSX tree, avoiding the complexity of conditional rendering or duplicate component trees. This is the standard Tailwind approach for responsive design.
+- **`truncate` on legend labels and company names**: Stage names (e.g., `SHORTLISTED`) and company names can overflow their containers on narrow screens. `truncate` applies `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` in a single utility, preventing layout breakage while preserving readability for shorter values.
+
+---
+
 #### `src/app/api/referrals/route.ts` — Modified — April 9, 2026
 
 **Summary**

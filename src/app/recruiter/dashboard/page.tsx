@@ -342,6 +342,9 @@ export default function RecruiterDashboardPage() {
   // Application detail panel
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
+  // Search/filter
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Error toast
   const [toastError, setToastError] = useState<string | null>(null);
 
@@ -388,9 +391,20 @@ export default function RecruiterDashboardPage() {
 
   // ── Group by stage ──────────────────────────────────────────────────────────
 
+  const filteredApplications = searchQuery.trim()
+    ? applications.filter(a => {
+        const q = searchQuery.toLowerCase();
+        return (
+          a.applicant.name.toLowerCase().includes(q) ||
+          a.applicant.skills.some(s => s.toLowerCase().includes(q)) ||
+          a.jobPost.title.toLowerCase().includes(q)
+        );
+      })
+    : applications;
+
   const grouped = KANBAN_STAGES.reduce<Record<PipelineStage, Application[]>>(
     (acc, stage) => {
-      acc[stage] = applications.filter((a) => a.stage === stage);
+      acc[stage] = filteredApplications.filter((a) => a.stage === stage);
       return acc;
     },
     {} as Record<PipelineStage, Application[]>
@@ -573,69 +587,72 @@ export default function RecruiterDashboardPage() {
   const selectedCount = selectedIds.size;
 
   return (
-    <div className="min-h-screen bg-gray-950 px-6 py-8">
+    <div className="min-h-screen bg-gray-950 px-4 sm:px-6 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Pipeline</h1>
-          <p className="mt-0.5 text-sm text-gray-400">
-            {applications.filter((a) => KANBAN_STAGES.includes(a.stage)).length} active applications
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/recruiter/analytics"
-            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
-          >
-            Analytics
-          </Link>
-          <Link
-            href="/recruiter/ai-tools"
-            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
-          >
-            🤖 AI Tools
-          </Link>
-          <Link
-            href="/recruiter/jobs"
-            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
-          >
-            My Jobs
-          </Link>
+      <div className="mb-6">
+        {/* Top row: title + primary action */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">Pipeline</h1>
+            <p className="mt-0.5 text-xs sm:text-sm text-gray-400">
+              {applications.filter((a) => KANBAN_STAGES.includes(a.stage)).length} active
+            </p>
+          </div>
           <Link
             href="/recruiter/jobs/new"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+            className="shrink-0 rounded-lg bg-emerald-600 px-3 sm:px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
           >
-            + Post a Job
+            + Post Job
           </Link>
+        </div>
 
-          {/* Bulk action bar */}
-          {selectedCount > 0 && (
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-gray-900 px-4 py-2.5">
-              <span className="text-sm text-gray-300">
-                {selectedCount} selected
-              </span>
-              <button
-                onClick={handleBulkAdvance}
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
-              >
-                Advance selected
-              </button>
-              <button
-                onClick={() => setRejectionModal({ mode: "bulk" })}
-                className="rounded-lg bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
-              >
-                Reject selected
-              </button>
-              <button
-                onClick={clearSelection}
-                className="text-xs text-gray-500 hover:text-gray-300"
-              >
-                Clear
-              </button>
-            </div>
+        {/* Nav links row — scrollable on mobile */}
+        <div className="flex gap-2 overflow-x-auto webkit-removed pb-1">
+          <Link href="/recruiter/jobs"
+            className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 hover:bg-white/5 transition-colors">
+            My Jobs
+          </Link>
+          <Link href="/recruiter/analytics"
+            className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 hover:bg-white/5 transition-colors">
+            Analytics
+          </Link>
+          <Link href="/recruiter/ai-tools"
+            className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 hover:bg-white/5 transition-colors">
+            🤖 AI Tools
+          </Link>
+        </div>
+
+        {/* Search/filter */}
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by name or skill…"
+            className="flex-1 rounded-lg border border-white/10 bg-gray-900 px-3 py-1.5 text-sm text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="text-xs text-gray-500 hover:text-gray-300">Clear</button>
           )}
         </div>
+
+        {/* Bulk action bar */}
+        {selectedCount > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-gray-900 px-3 sm:px-4 py-2.5">
+            <span className="text-sm text-gray-300 mr-1">{selectedCount} selected</span>
+            <button onClick={handleBulkAdvance}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700">
+              Advance
+            </button>
+            <button onClick={() => setRejectionModal({ mode: "bulk" })}
+              className="rounded-lg bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700">
+              Reject
+            </button>
+            <button onClick={clearSelection} className="text-xs text-gray-500 hover:text-gray-300 ml-auto">
+              Clear
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Kanban board */}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { rateLimitByUser, RATE_LIMITS } from "@/lib/rateLimit";
 import { emitToUser } from "@/lib/socketio";
+import { sendEmail, interviewInviteEmail } from "@/lib/email";
 
 // GET — list interviews for current user
 export async function GET(_req: NextRequest) {
@@ -74,6 +75,24 @@ export async function POST(req: NextRequest) {
 
   emitToUser(application.applicantId, "notification:new", notification);
   emitToUser(application.applicantId, "interview:invited", { interviewId: interview.id, applicationId });
+
+  // Send interview invite email (non-blocking)
+  const applicantUser = await prisma.user.findUnique({
+    where: { id: application.applicantId },
+    select: { email: true, name: true },
+  });
+  if (applicantUser) {
+    sendEmail({
+      to: applicantUser.email,
+      subject: `Interview Invitation: ${application.jobPost.title}`,
+      html: interviewInviteEmail({
+        applicantName: applicantUser.name,
+        jobTitle: application.jobPost.title,
+        company: application.jobPost.title,
+        slots: proposedSlots,
+      }),
+    }).catch(() => {});
+  }
 
   return NextResponse.json(interview, { status: 201 });
 }

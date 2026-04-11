@@ -28,6 +28,7 @@ interface Application {
   stage: PipelineStage;
   submittedAt: string;
   updatedAt: string;
+  isWithdrawn: boolean;
   rejectionReason: RejectionReason | null;
   recruiterNotes: string | null;
   jobPost: {
@@ -44,6 +45,26 @@ interface Application {
       avgResponseTimeHours: number | null;
       recruiterVerified: boolean;
     };
+  };
+}
+
+interface ApplicationDetail {
+  id: string;
+  stage: string;
+  submittedAt: string;
+  applicantName: string | null;
+  applicantEmail: string | null;
+  applicantPhone: string | null;
+  yearsOfExperience: number | null;
+  coverLetter: string | null;
+  cvPublicId: string | null;
+  cvFileName: string | null;
+  jobPost: {
+    id: string;
+    title: string;
+    city: string;
+    jobType: string;
+    recruiter: { name: string; companyName: string | null };
   };
 }
 
@@ -133,6 +154,123 @@ function ResponseRateBadge({ rate }: { rate: number }) {
   );
 }
 
+// ─── Application Detail Modal ─────────────────────────────────────────────────
+
+function ApplicationDetailModal({ applicationId, onClose }: { applicationId: string; onClose: () => void }) {
+  const [detail, setDetail] = useState<ApplicationDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [cvLoading, setCvLoading] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/applications/${applicationId}`)
+      .then(r => r.json())
+      .then(data => { if (!data.error) setDetail(data); })
+      .finally(() => setLoading(false));
+  }, [applicationId]);
+
+  const handleViewCV = async () => {
+    if (!detail?.cvPublicId) return;
+    setCvLoading(true);
+    const res = await fetch(`/api/upload/cv-url?publicId=${encodeURIComponent(detail.cvPublicId)}`);
+    const data = await res.json();
+    if (data.url) window.open(data.url, "_blank");
+    setCvLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+      <div className="w-full sm:max-w-lg bg-card dark:bg-card-dark border border-border dark:border-border-dark rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b border-border dark:border-border-dark bg-card dark:bg-card-dark rounded-t-2xl sm:rounded-t-2xl">
+          <h2 className="text-base font-semibold text-foreground">My Application</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface dark:hover:bg-surface-dark transition-colors text-muted">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : !detail ? (
+          <p className="text-center text-muted py-10">Failed to load details</p>
+        ) : (
+          <div className="p-5 space-y-5">
+            {/* Job info */}
+            <div className="rounded-xl bg-surface dark:bg-surface-dark p-4">
+              <p className="text-xs text-muted mb-0.5">Applied to</p>
+              <p className="font-semibold text-foreground">{detail.jobPost.title}</p>
+              <p className="text-sm text-muted mt-0.5">
+                {detail.jobPost.recruiter.companyName || detail.jobPost.recruiter.name} · {detail.jobPost.city}
+              </p>
+            </div>
+
+            {/* Submitted info */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">What you submitted</h3>
+
+              {detail.applicantName && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Full Name</span>
+                  <span className="font-medium text-foreground">{detail.applicantName}</span>
+                </div>
+              )}
+              {detail.applicantEmail && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Email</span>
+                  <span className="font-medium text-foreground truncate ml-4">{detail.applicantEmail}</span>
+                </div>
+              )}
+              {detail.applicantPhone && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Phone</span>
+                  <span className="font-medium text-foreground">{detail.applicantPhone}</span>
+                </div>
+              )}
+              {detail.yearsOfExperience != null && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Experience</span>
+                  <span className="font-medium text-foreground">{detail.yearsOfExperience} year{detail.yearsOfExperience !== 1 ? "s" : ""}</span>
+                </div>
+              )}
+              {detail.coverLetter && (
+                <div className="text-sm">
+                  <p className="text-muted mb-1.5">Cover Letter</p>
+                  <p className="text-foreground leading-relaxed bg-surface dark:bg-surface-dark rounded-lg p-3 text-xs whitespace-pre-wrap">{detail.coverLetter}</p>
+                </div>
+              )}
+              {detail.cvPublicId ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted">CV / Resume</span>
+                  <button
+                    onClick={handleViewCV}
+                    disabled={cvLoading}
+                    className="flex items-center gap-1.5 rounded-lg bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-50"
+                  >
+                    {cvLoading ? "Loading…" : `📄 ${detail.cvFileName || "View CV"}`}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">CV / Resume</span>
+                  <span className="text-muted italic">Not submitted</span>
+                </div>
+              )}
+            </div>
+
+            {/* Submitted at */}
+            <p className="text-xs text-muted text-center pt-2 border-t border-border dark:border-border-dark">
+              Submitted {new Date(detail.submittedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
@@ -153,7 +291,7 @@ function SkeletonCard() {
 
 // ─── Application Card ─────────────────────────────────────────────────────────
 
-function ApplicationCard({ app }: { app: Application }) {
+function ApplicationCard({ app, onViewDetail, onWithdraw }: { app: Application; onViewDetail: (id: string) => void; onWithdraw: (id: string) => void }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const { jobPost } = app;
   if (!jobPost || !jobPost.recruiter) return null;
@@ -235,6 +373,27 @@ function ApplicationCard({ app }: { app: Application }) {
           )}
         </div>
       )}
+
+      {/* Actions */}
+      <div className="mt-3 pt-3 border-t border-border dark:border-border-dark flex items-center justify-between gap-3">
+        <button
+          onClick={() => onViewDetail(app.id)}
+          className="text-xs text-primary hover:underline"
+        >
+          View submitted details →
+        </button>
+        {!app.isWithdrawn && !["OFFER","REJECTED","EXPIRED"].includes(app.stage) && (
+          <button
+            onClick={() => onWithdraw(app.id)}
+            className="text-xs text-red-400 hover:text-red-300 hover:underline"
+          >
+            Withdraw
+          </button>
+        )}
+        {app.isWithdrawn && (
+          <span className="text-xs text-muted italic">Withdrawn</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -326,6 +485,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; stage: string } | null>(null);
   const [socketConnected, setSocketConnected] = useState(true);
+  const [detailAppId, setDetailAppId] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
   // Fetch applications on mount
@@ -381,6 +541,14 @@ export default function DashboardPage() {
 
   const userName = session?.user?.name ?? "there";
 
+  const handleWithdraw = async (id: string) => {
+    if (!confirm("Are you sure you want to withdraw this application?")) return;
+    const res = await fetch(`/api/applications/${id}/withdraw`, { method: "POST" });
+    if (res.ok) {
+      setApplications(prev => prev.map(a => a.id === id ? { ...a, isWithdrawn: true } : a));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pt-24 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -421,6 +589,12 @@ export default function DashboardPage() {
           >
             📊 Analytics
           </Link>
+          <Link
+            href="/dashboard/profile"
+            className="rounded-lg border border-border dark:border-border-dark px-4 py-2 text-sm font-medium text-muted hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+          >
+            👤 My Profile
+          </Link>
         </nav>
 
         {/* Content */}
@@ -460,7 +634,7 @@ export default function DashboardPage() {
             )}
             <div className="space-y-4">
               {applications.map((app) => (
-                <ApplicationCard key={app.id} app={app} />
+                <ApplicationCard key={app.id} app={app} onViewDetail={setDetailAppId} onWithdraw={handleWithdraw} />
               ))}
             </div>
           </>
@@ -480,6 +654,13 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {detailAppId && (
+        <ApplicationDetailModal
+          applicationId={detailAppId}
+          onClose={() => setDetailAppId(null)}
+        />
+      )}
     </div>
   );
 }

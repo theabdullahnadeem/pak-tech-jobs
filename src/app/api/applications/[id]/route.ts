@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { PipelineStage } from "@prisma/client";
 import { recalculateRecruiterMetrics } from "@/lib/recruiterMetrics";
 import { emitToUser } from "@/lib/socketio";
+import { sendEmail, stageChangeEmail, offerEmail } from "@/lib/email";
 
 // Stages that can be set via this endpoint (REJECTED uses a separate endpoint)
 const ALLOWED_STAGES: PipelineStage[] = [
@@ -16,9 +17,9 @@ const ALLOWED_STAGES: PipelineStage[] = [
 /**
  * GET /api/applications/[id]
  *
- * Returns full application details for a recruiter.
- * - Requires authenticated RECRUITER who owns the job post.
- * - Returns all submitted applicant fields including CV info.
+ * Returns full application details.
+ * - RECRUITER: must own the job post.
+ * - APPLICANT: must be the applicant who submitted the application.
  *
  * Requirements: 4.1, 4.3
  */
@@ -31,9 +32,6 @@ export async function GET(
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (session.user.role !== "RECRUITER") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const application = await prisma.application.findUnique({
@@ -57,6 +55,14 @@ export async function GET(
           id: true,
           title: true,
           recruiterId: true,
+          city: true,
+          jobType: true,
+          experienceLevel: true,
+          salaryMin: true,
+          salaryMax: true,
+          recruiter: {
+            select: { id: true, name: true, companyName: true },
+          },
         },
       },
       applicant: {
@@ -76,11 +82,21 @@ export async function GET(
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 
-  if (application.jobPost.recruiterId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (session.user.role === "RECRUITER") {
+    if (application.jobPost.recruiterId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    return NextResponse.json(application);
   }
 
-  return NextResponse.json(application);
+  if (session.user.role === "APPLICANT") {
+    if (application.applicant.id !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    return NextResponse.json(application);
+  }
+
+  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 }
 
 /**
@@ -231,6 +247,20 @@ export async function PATCH(
 
   if (interviewNotification) {
     emitToUser(application.applicantId, "notification:new", interviewNotification);
+  }
+
+  // Send email notification for significant stage changes
+  if (["SHORTLISTED", "INTERVIEW", "OFFER"].includes(targetStage)) {
+    const applicantUser = await prisma.user.findUnique({
+      where: { id: application.applicantId },
+      select: { email: true, name: true },
+    });
+    if (applicantUser) {
+      const html = targetStage === "OFFER"
+        ? offerEmail({ applicantName: applicantUser.name, jobTitle: application.jobPost.title, company: application.jobPost.title })
+        : stageChangeEmail({ applicantName: applicantUser.name, jobTitle: application.jobPost.title, company: application.jobPost.title, newStage: targetStage, applicationId: id });
+      sendEmail({ to: applicantUser.email, subject: `Application Update: ${application.jobPost.title}`, html }).catch(() => {});
+    }
   }
 
   return NextResponse.json(updatedApplication);

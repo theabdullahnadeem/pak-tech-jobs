@@ -62,12 +62,21 @@ export default function RecruiterJobsPage() {
           <h1 className="text-2xl font-bold text-white">My Job Posts</h1>
           <p className="mt-0.5 text-sm text-gray-400">{jobs.length} total posts</p>
         </div>
-        <Link
-          href="/recruiter/jobs/new"
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
-        >
-          + Post a Job
-        </Link>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/applications/export"
+            download
+            className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors"
+          >
+            Export All CSV
+          </a>
+          <Link
+            href="/recruiter/jobs/new"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+          >
+            + Post a Job
+          </Link>
+        </div>
       </div>
 
       {jobs.length === 0 ? (
@@ -105,6 +114,13 @@ export default function RecruiterJobsPage() {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={`/api/applications/export?jobPostId=${job.id}`}
+                  download
+                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-300 hover:bg-white/5 transition-colors"
+                >
+                  CSV
+                </a>
                 <button
                   onClick={() => router.push(`/recruiter/jobs/${job.id}/edit`)}
                   disabled={job.isClosed}

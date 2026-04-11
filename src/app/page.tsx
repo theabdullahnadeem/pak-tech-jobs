@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -10,7 +10,6 @@ import StatsBar from "@/components/StatsBar";
 import JobCard from "@/components/JobCard";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import ResumeReviewCTA from "@/components/ResumeReviewCTA";
-import { getJobsByCategory } from "@/data/jobs";
 import { salaryRoles } from "@/data/salaries";
 import { resources } from "@/data/resources";
 
@@ -19,9 +18,20 @@ gsap.registerPlugin(ScrollTrigger);
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
-  
-  // Get 6 trending jobs for the homepage
-  const trendingJobs = getJobsByCategory("All Cities").slice(0, 6);
+
+  const [trendingJobs, setTrendingJobs] = useState<{
+    id: string; title: string; city: string; jobType: string;
+    experienceLevel: string; salaryMin: number; salaryMax: number;
+    skills: string[]; recruiter: { name: string; companyName: string | null };
+  }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/jobs?limit=6")
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setTrendingJobs(data.slice(0, 6)); })
+      .catch(() => {});
+  }, []);
+
   // Secondary content
   const featuredSalaries = salaryRoles.slice(0, 3);
   const featuredResources = resources.slice(0, 3);
@@ -236,11 +246,17 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-            {trendingJobs.map((job) => (
-              <div key={job.id} className="trending-job-card">
-                <JobCard {...job} />
-              </div>
-            ))}
+            {trendingJobs.length === 0 ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="h-32 rounded-2xl bg-surface dark:bg-surface-dark animate-pulse" />
+              ))
+            ) : (
+              trendingJobs.map((job) => (
+                <div key={job.id} className="trending-job-card">
+                  <JobCard {...job} />
+                </div>
+              ))
+            )}
           </div>
           
           <div className="text-center">

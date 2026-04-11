@@ -67,6 +67,8 @@ enum NotificationType {
   REFERRAL_JOINED
   SKILL_VERIFIED
   REVIEW_RECEIVED
+  APPLICATION_WITHDRAWN
+  JOB_EXPIRING
 }
 
 enum VerificationStatus {
@@ -114,6 +116,19 @@ model User {
   // Skill verification
   verifiedSkills       String[]  @default([])
 
+  // Applicant public profile
+  portfolioUrl         String?
+  bio                  String?
+  avatarPublicId       String?
+  profileSlug          String?   @unique
+
+  // 2FA
+  twoFactorEnabled     Boolean   @default(false)
+  twoFactorSecret      String?
+
+  // Theme preference
+  themePreference      String?   @default("system")
+
   jobPosts                  JobPost[]
   applications              Application[]
   notifications             Notification[]
@@ -154,6 +169,8 @@ model JobPost {
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
   requiredFields        String[]        @default(["name", "email"])
+  expiresAt            DateTime?
+  publicFeedback       String?
 
   applications Application[]
   savedByUsers SavedJob[]
@@ -186,6 +203,8 @@ model Application {
   slaWarning7Sent  Boolean         @default(false)
   slaWarning13Sent Boolean         @default(false)
   updatedAt       DateTime         @updatedAt
+  withdrawnAt          DateTime?
+  isWithdrawn          Boolean   @default(false)
 
   messageThread MessageThread?
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import NotificationBell from "./NotificationBell";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navLinks = [
   { href: "/salaries", label: "Salaries" },
@@ -90,6 +91,7 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+                <ThemeToggle />
                 <NotificationBell />
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
@@ -100,6 +102,7 @@ export default function Navbar() {
               </>
             ) : (
               <>
+                <ThemeToggle />
                 <Link
                   href="/login"
                   className="px-4 py-2 rounded-lg text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-primary/10 transition-all duration-200"
@@ -180,6 +183,10 @@ export default function Navbar() {
             </div>
 
             <div className="pt-2 border-t border-border">
+              <div className="flex items-center px-4 py-2 gap-2">
+                <span className="text-xs text-muted">Theme</span>
+                <ThemeToggle />
+              </div>
               {session?.user ? (
                 <>
                   <Link
