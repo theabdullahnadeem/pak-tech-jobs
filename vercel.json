@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sla",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/job-expiry",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/newsletter",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/expire-featured",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/demand",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

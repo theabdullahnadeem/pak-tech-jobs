@@ -171,6 +171,8 @@ model JobPost {
   requiredFields        String[]        @default(["name", "email"])
   expiresAt            DateTime?
   publicFeedback       String?
+  isFeatured           Boolean   @default(false)
+  featuredUntil        DateTime?
 
   applications Application[]
   savedByUsers SavedJob[]

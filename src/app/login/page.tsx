@@ -8,6 +8,7 @@ import { signIn } from "next-auth/react";
 function LoginForm() {
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
+  const verified = searchParams.get("verified");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,6 +57,11 @@ function LoginForm() {
       <p className="text-sm text-[var(--color-muted)] mb-6">Sign in to your Clarify account.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {verified && (
+          <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+            ✓ Email verified! You can now sign in.
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input

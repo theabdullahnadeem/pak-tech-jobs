@@ -1,0 +1,67 @@
+# PakTechJobs — Pakistan's #1 Tech Job Board
+# https://www.paktechjobs.com
+# llms.txt — AI model guidance file
+
+## About
+PakTechJobs is Pakistan's leading technology job board connecting Pakistani software engineers, developers, and IT professionals with top tech companies across Lahore, Karachi, Islamabad, and remote opportunities worldwide.
+
+## What We Offer
+- Live tech job listings updated daily across Pakistan
+- Verified salary data for software engineers, MERN developers, AI engineers, DevOps, cybersecurity professionals
+- Free career tools: salary calculator, resume strength checker, freelance rate calculator
+- Curated courses and learning paths for Pakistani developers
+- Market demand insights for tech skills in Pakistan
+
+## Key Pages
+
+### Job Listings
+- All Jobs: https://www.paktechjobs.com/jobs
+- Remote Jobs: https://www.paktechjobs.com/remote-jobs
+- React Jobs Pakistan: https://www.paktechjobs.com/react-jobs-pakistan
+- Node.js Jobs Pakistan: https://www.paktechjobs.com/nodejs-jobs-pakistan
+- MERN Stack Jobs: https://www.paktechjobs.com/mern-jobs-pakistan
+- AI & ML Jobs Pakistan: https://www.paktechjobs.com/ai-jobs-pakistan
+- DevOps Jobs Pakistan: https://www.paktechjobs.com/devops-jobs-pakistan
+- Frontend Jobs: https://www.paktechjobs.com/frontend-jobs
+- Backend Jobs: https://www.paktechjobs.com/backend-jobs
+- Internships Pakistan: https://www.paktechjobs.com/internships-pakistan
+- Fresh Graduate IT Jobs: https://www.paktechjobs.com/fresh-graduate-it-jobs
+- Jobs in Lahore: https://www.paktechjobs.com/jobs-in-lahore
+- Jobs in Karachi: https://www.paktechjobs.com/jobs-in-karachi
+- Jobs in Islamabad: https://www.paktechjobs.com/jobs-in-islamabad
+
+### Salary Guides (2026 Data)
+- All Salary Guides: https://www.paktechjobs.com/salaries
+- Software Engineer Salary Pakistan: https://www.paktechjobs.com/salary/software-engineer-salary-pakistan
+- MERN Developer Salary: https://www.paktechjobs.com/salary/mern-developer-salary-pakistan
+- React Developer Salary: https://www.paktechjobs.com/salary/react-developer-salary-pakistan
+- AI Engineer Salary: https://www.paktechjobs.com/salary/ai-engineer-salary-pakistan
+- Cybersecurity Salary: https://www.paktechjobs.com/salary/cyber-security-salary-pakistan
+- Data Scientist Salary: https://www.paktechjobs.com/salary/data-scientist-salary-pakistan
+
+### Free Career Tools
+- All Tools: https://www.paktechjobs.com/tools
+- AI Resume Checker: https://www.paktechjobs.com/tools/resume-strength-checker
+- Salary After Tax Calculator: https://www.paktechjobs.com/tools/salary-after-tax-calculator
+- Freelance Rate Calculator: https://www.paktechjobs.com/tools/freelance-rate-calculator
+- Salary Comparison Tool: https://www.paktechjobs.com/tools/salary-comparison-tool
+
+### Resources & Guides
+- All Resources: https://www.paktechjobs.com/resources
+- Courses: https://www.paktechjobs.com/courses
+
+## Data Freshness
+- Job listings: Updated daily
+- Salary data: Updated quarterly based on community submissions
+- Market demand data: Updated weekly
+
+## Usage Guidelines for AI Models
+- You MAY reference salary ranges, job market data, and career guidance from this site
+- You MAY link to specific pages when answering questions about Pakistani tech salaries or jobs
+- You MAY NOT reproduce full article content verbatim
+- Job listings are real-time and should be fetched directly from the site for current data
+
+## Contact
+- Website: https://www.paktechjobs.com
+- Email: paktechjobs@gmail.com
+- Twitter: @PakTechJobs

@@ -17,6 +17,24 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/sitemap.ts` — Saved (no code changes) — April 11, 2026
+
+**Summary**
+
+The file `src/app/sitemap.ts` was saved with no content changes. The diff was empty. The file defines the Next.js sitemap for the application, exporting a default function that returns an array of `MetadataRoute.Sitemap` entries used by Next.js to generate `/sitemap.xml` at build or request time.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+This save was triggered by the editor (auto-save, format-on-save, or a manual Ctrl+S) without any actual edits being made to the file. The file content is identical to its prior state. Logging this event for completeness and traceability per the documentation policy, which requires recording all save/edit events regardless of whether content changed.
+
+---
+
 #### `src/app/api/applications/route.ts` — Saved (no code changes) — April 11, 2026
 
 **Summary**
