@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Tech Salaries in Pakistan 2026 \u2014 All Roles & Cities",
+  title: "Software Engineer Salaries in Pakistan 2026 — By City, Role & Experience | PakTechJobs",
   description:
-    "Detailed salary breakdowns for 10+ tech roles across Pakistan. Junior to senior pay scales for MERN, AI, DevOps, cyber security & more. Updated March 2026.",
+    "Real salary data for software engineers in Pakistan 2026. Compare React, Node.js, AI/ML, DevOps salaries by city and experience level. Updated quarterly.",
   openGraph: {
-    title: "Tech Salaries in Pakistan 2026 \u2014 All Roles & Cities",
+    title: "Software Engineer Salaries in Pakistan 2026 — By City, Role & Experience | PakTechJobs",
     description:
-      "Detailed salary breakdowns for 10+ tech roles across Pakistan. Junior to senior pay scales. Updated March 2026.",
+      "Real salary data for software engineers in Pakistan 2026. Compare React, Node.js, AI/ML, DevOps salaries by city and experience level. Updated quarterly.",
   },
 };
 

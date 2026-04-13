@@ -173,6 +173,7 @@ model JobPost {
   publicFeedback       String?
   isFeatured           Boolean   @default(false)
   featuredUntil        DateTime?
+  applyUrl             String?
 
   applications Application[]
   savedByUsers SavedJob[]

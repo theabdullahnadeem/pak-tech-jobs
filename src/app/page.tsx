@@ -155,11 +155,11 @@ export default function HomePage() {
               🇵🇰 Pakistan&apos;s #1 Tech Job Board
             </span>
             <h1 className="hero-title text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-black leading-tight mb-6">
-              Find Tech Jobs in Pakistan — Remote, Lahore, Karachi &amp; Beyond
+              Pakistan's Tech Job Board — Software, AI &amp; IT Jobs
             </h1>
             
             <p className="hero-subtitle text-lg sm:text-xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Browse hundreds of software engineering, AI, and IT jobs updated daily. Built for Pakistani developers.
+              Browse 100+ software engineering, AI, and IT jobs in Pakistan. Updated daily with roles in Lahore, Karachi, Islamabad, and Remote. Free for developers — no sign-up needed.
             </p>
 
             <div className="hero-search max-w-2xl mx-auto mb-6">
@@ -232,52 +232,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════ TRENDING / LATEST JOBS ═══════════ */}
+      {/* ═══════════ TRENDING / LATEST JOBS — only shown when jobs exist ═══════════ */}
       <section className="py-20 sm:py-24 bg-surface dark:bg-surface-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="section-heading-reveal text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              🔥 Trending Tech Jobs This Week
-            </h2>
-            <p className="text-lg text-muted">
-              The hottest positions actively recruiting Pakistani developers.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-            {trendingJobs.length === 0 ? (
-              [...Array(6)].map((_, i) => (
-                <div key={i} className="h-32 rounded-2xl bg-surface dark:bg-surface-dark animate-pulse" />
-              ))
-            ) : (
-              trendingJobs.map((job) => (
-                <div key={job.id} className="trending-job-card">
-                  <Link href={`/jobs/${job.id}`}
-                    className="group flex flex-col p-5 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 shrink-0 rounded-xl border border-border dark:border-border-dark bg-surface dark:bg-surface-dark flex items-center justify-center text-base font-bold text-muted">
-                        {(job.recruiter.companyName || job.recruiter.name).charAt(0)}
+          {trendingJobs.length > 0 && (
+            <>
+              <div className="section-heading-reveal text-center mb-14">
+                <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                  🔥 Trending Tech Jobs This Week
+                </h2>
+                <p className="text-lg text-muted">
+                  The hottest positions actively recruiting Pakistani developers.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+                {trendingJobs.map((job) => (
+                  <div key={job.id} className="trending-job-card">
+                    <Link href={`/jobs/${job.id}`}
+                      className="group flex flex-col p-5 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-10 h-10 shrink-0 rounded-xl border border-border dark:border-border-dark bg-surface dark:bg-surface-dark flex items-center justify-center text-base font-bold text-muted">
+                          {(job.recruiter.companyName || job.recruiter.name).charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{job.title}</h3>
+                          <p className="text-sm text-muted truncate">{job.recruiter.companyName || job.recruiter.name} · {job.city}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{job.title}</h3>
-                        <p className="text-sm text-muted truncate">{job.recruiter.companyName || job.recruiter.name} · {job.city}</p>
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {job.skills.slice(0, 3).map(s => (
+                          <span key={s} className="rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium">{s}</span>
+                        ))}
                       </div>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {job.skills.slice(0, 3).map(s => (
-                        <span key={s} className="rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium">{s}</span>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted mt-auto pt-3 border-t border-border dark:border-border-dark">
-                      <span>{job.jobType.replace("_", " ")} · {job.experienceLevel}</span>
-                      <span className="font-medium text-foreground">PKR {job.salaryMin.toLocaleString()}+</span>
-                    </div>
-                  </Link>
-                </div>
-              ))
-            )}
-          </div>
-          
+                      <div className="flex items-center justify-between text-xs text-muted mt-auto pt-3 border-t border-border dark:border-border-dark">
+                        <span>{job.jobType.replace("_", " ")} · {job.experienceLevel}</span>
+                        <span className="font-medium text-foreground">PKR {job.salaryMin.toLocaleString()}+</span>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
           <div className="text-center">
             <Link 
               href="/jobs" 
@@ -296,23 +292,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════ HIRING PARTNERS STRIP ═══════════ */}
-      <section className="py-16 bg-background border-t border-border dark:border-border-dark overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
-          <p className="text-sm font-bold text-muted uppercase tracking-widest">
-            Companies Actively Hiring on PakTechJobs
-          </p>
-        </div>
-        <div className="flex gap-8 items-center justify-center flex-wrap opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-           {/* Placeholder logos since we don't have real logos yet */}
-           {[1,2,3,4,5,6].map((i) => (
-             <div key={i} className="flex items-center gap-2 text-xl font-bold px-4 py-2 bg-surface text-foreground rounded-xl border border-border">
-               <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-sm">👔</div>
-               Company {i}
-             </div>
-           ))}
-        </div>
-      </section>
+
 
       {/* ═══════════ SECONDARY: FEATURED SEO ARTICLES ═══════════ */}
       <section className="py-20 sm:py-24 bg-surface dark:bg-surface-dark border-y border-border dark:border-border-dark">

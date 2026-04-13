@@ -17,6 +17,46 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `prisma/schema.prisma` — Modified — April 13, 2026
+
+**Summary**
+
+Added a new optional field `applyUrl` (`String?`) to the `Job` model.
+
+**Change**
+
+```diff
++  applyUrl             String?
+```
+
+**Reasoning**
+
+The `applyUrl` field allows a job listing to store an external application URL, enabling recruiters to direct applicants to an off-platform application page (e.g., a company careers portal) instead of — or in addition to — the platform's native application flow.
+
+**Approach**
+
+Defined as a nullable `String?` rather than a required field to maintain backward compatibility with existing job records that do not have an external apply URL.
+
+---
+
+#### `src/app/page.tsx` — Saved (no code changes) — April 13, 2026
+
+**Summary**
+
+The file `src/app/page.tsx` was saved with no code changes. It is the root home page of the PakTechJobs Next.js application, rendering the main landing experience including the hero section, job search bar, featured jobs, category listings, and any other top-level homepage content.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+File was saved by the editor (auto-save, format-on-save, or manual Ctrl+S) with no actual edits. Content is identical to its prior state.
+
+---
+
 #### `src/components/CategoryJobsPage.tsx` — Saved (no code changes) — April 11, 2026
 
 **Summary**

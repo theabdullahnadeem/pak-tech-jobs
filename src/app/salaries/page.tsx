@@ -53,10 +53,10 @@ export default function SalariesPage() {
     <div ref={containerRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
       <div className="text-center mb-14">
         <h1 className="salary-heading-text text-3xl sm:text-4xl font-bold mb-4">
-          Software Engineer <span className="gradient-text">Salary in Pakistan</span> 2026
+          Software Engineer Salaries in Pakistan 2026 — <span className="gradient-text">By City, Role &amp; Experience</span>
         </h1>
         <p className="salary-heading-desc text-muted max-w-2xl mx-auto text-lg">
-          Detailed salary breakdowns for software engineers, MERN developers, cyber security experts, AI engineers, data scientists & more across Lahore, Karachi & Islamabad.
+          Real, up-to-date salary data for software engineers in Pakistan. Compare compensation for React developers, Node.js engineers, AI/ML engineers, DevOps, and more — broken down by city (Lahore, Karachi, Islamabad), experience level (junior, mid, senior), and work type (remote vs on-site). Data updated quarterly.
         </p>
       </div>
 

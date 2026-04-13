@@ -112,6 +112,7 @@ export async function GET(req: NextRequest) {
         jobType: true,
         category: true,
         createdAt: true,
+        applyUrl: true,
         recruiter: {
           select: {
             id: true,

@@ -81,6 +81,12 @@ export default function Navbar() {
 
           {/* Auth / Role-aware links + Notification Bell */}
           <div className="hidden md:flex items-center gap-1">
+            <Link
+              href="/register?role=recruiter"
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-all duration-200 mr-1"
+            >
+              Post a Job — Free
+            </Link>
             {session?.user ? (
               <>
                 <Link
@@ -185,6 +191,13 @@ export default function Navbar() {
                 <span className="text-xs text-muted">Theme</span>
                 <ThemeToggle />
               </div>
+              <Link
+                href="/register?role=recruiter"
+                onClick={() => setMobileOpen(false)}
+                className="block px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white text-center mx-4 mb-2"
+              >
+                Post a Job — Free
+              </Link>
               {session?.user ? (
                 <>
                   <Link

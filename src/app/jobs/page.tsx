@@ -142,10 +142,10 @@ export default function JobsPage() {
           <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-[0.03]" />
           <div className="relative z-10 text-center max-w-2xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-              Tech Jobs in Pakistan
+              Tech Jobs in Pakistan 2026
             </h1>
             <p className="text-gray-300 mb-8">
-              Find your next role. Every listing shows recruiter response rates so you know where to invest your time.
+              Browse software engineering, AI, DevOps, React, Node.js, and IT jobs in Lahore, Karachi, Islamabad, and Remote. Every listing shows recruiter response rates.
             </p>
             {/* Keyword search */}
             <div className="relative">

@@ -13,6 +13,7 @@ export interface LiveJob {
   salaryMax: number;
   skills: string[];
   createdAt: string;
+  applyUrl?: string | null;
   recruiter: {
     id: string;
     name: string;
@@ -56,21 +57,41 @@ function formatExperience(el: string) {
 export default function LiveJobCard({ job }: { job: LiveJob }) {
   const isRemote = job.jobType === "REMOTE" || job.location.toLowerCase().includes("remote");
   const companyName = job.recruiter.companyName ?? job.recruiter.name;
+  const isAggregated = !!job.applyUrl;
 
   return (
     <div className="group relative flex flex-col p-6 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
+      {/* Aggregated badge */}
+      {isAggregated && (
+        <span className="absolute top-4 right-4 text-[10px] font-medium text-muted bg-surface dark:bg-surface-dark px-2 py-0.5 rounded-full border border-border dark:border-border-dark">
+          External
+        </span>
+      )}
+
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
         <div className="w-11 h-11 flex-shrink-0 rounded-xl border border-border dark:border-border-dark bg-surface dark:bg-surface-dark flex items-center justify-center">
           <span className="text-lg font-bold text-muted">{companyName.charAt(0)}</span>
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-16">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-              <Link href={`/jobs/${job.id}`} className="focus:outline-none">
-                <span className="absolute inset-0" aria-hidden="true" />
-                {job.title}
-              </Link>
+              {isAggregated ? (
+                <a
+                  href={job.applyUrl!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="focus:outline-none hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {job.title}
+                </a>
+              ) : (
+                <Link href={`/jobs/${job.id}`} className="focus:outline-none">
+                  <span className="absolute inset-0" aria-hidden="true" />
+                  {job.title}
+                </Link>
+              )}
             </h3>
           </div>
           <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm text-muted">
@@ -93,7 +114,7 @@ export default function LiveJobCard({ job }: { job: LiveJob }) {
         <span className="flex items-center gap-1 text-foreground">
           <span className="text-muted">💰</span>
           <span className="font-medium">
-            ${job.salaryMin.toLocaleString()} – ${job.salaryMax.toLocaleString()}
+            PKR {job.salaryMin.toLocaleString()} – {job.salaryMax.toLocaleString()}
           </span>
         </span>
         <span className="flex items-center gap-1 text-muted">
@@ -106,15 +127,17 @@ export default function LiveJobCard({ job }: { job: LiveJob }) {
         </span>
       </div>
 
-      {/* Response Rate + Avg Response Time */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <ResponseRateBadge rate={Math.round(job.recruiter.responseRate)} />
-        <span className="text-xs text-muted">
-          {job.recruiter.avgResponseTimeHours != null
-            ? `Avg. response: ${job.recruiter.avgResponseTimeHours}h`
-            : "Avg. response: N/A"}
-        </span>
-      </div>
+      {/* Response Rate — only for recruiter-posted jobs */}
+      {!isAggregated && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <ResponseRateBadge rate={Math.round(job.recruiter.responseRate)} />
+          <span className="text-xs text-muted">
+            {job.recruiter.avgResponseTimeHours != null
+              ? `Avg. response: ${job.recruiter.avgResponseTimeHours}h`
+              : "Avg. response: N/A"}
+          </span>
+        </div>
+      )}
 
       {/* Skills */}
       <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-border dark:border-border-dark relative z-10">
@@ -130,6 +153,26 @@ export default function LiveJobCard({ job }: { job: LiveJob }) {
           <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-surface dark:bg-surface-dark text-muted">
             +{job.skills.length - 4}
           </span>
+        )}
+
+        {/* Apply button — external for aggregated, internal for recruiter jobs */}
+        {isAggregated ? (
+          <a
+            href={job.applyUrl!}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="ml-auto flex-shrink-0 px-4 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Apply Now →
+          </a>
+        ) : (
+          <Link
+            href={`/jobs/${job.id}`}
+            className="ml-auto flex-shrink-0 px-4 py-1.5 rounded-lg border border-border dark:border-border-dark text-xs font-medium text-foreground hover:bg-surface dark:hover:bg-surface-dark transition-colors"
+          >
+            View Job
+          </Link>
         )}
       </div>
     </div>

@@ -19,11 +19,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.paktechjobs.com"),
   title: {
-    default: "Software Engineer Salary in Pakistan 2026 — Tech Salaries, Career Tools & Free Calculators | PakTechJobs",
+    default: "Pakistan Tech Job Board — Software, AI & IT Jobs 2026 | PakTechJobs",
     template: "%s | PakTechJobs",
   },
   description:
-    "Discover software engineer salary in Pakistan, cyber security salary, MERN developer salary Lahore, Karachi & Islamabad. Free salary after tax calculator, freelance rate calculator, developer salary comparison tool & AI resume checker for Pakistan's tech industry.",
+    "Browse 100+ software engineering, AI, and IT jobs in Pakistan. Updated daily. Roles in Lahore, Karachi, Islamabad & Remote. Free for developers. Also: salary guides, career tools, and AI resume checker.",
   keywords: [
     "software engineer salary in pakistan",
     "salary of software engineer in pakistan",

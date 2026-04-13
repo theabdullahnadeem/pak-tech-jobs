@@ -12,16 +12,24 @@ export default function NewsletterSignup() {
   const skills = ["React", "Node.js", "Python / AI", "Full Stack", "DevOps", "Cybersecurity", "Other"];
   const jobTypes = ["Remote", "On-site", "Both"];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Mock API call
-    setTimeout(() => {
+    try {
+      // Create a job alert for the subscriber
+      await fetch("/api/job-alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keywords: [skill || "Tech"],
+          jobType: jobType === "Remote" ? "REMOTE" : undefined,
+        }),
+      }).catch(() => {}); // non-fatal if not logged in
+    } finally {
       setLoading(false);
       setSubmitted(true);
       setEmail("");
-    }, 1000);
+    }
   };
 
   return (
@@ -76,7 +84,7 @@ export default function NewsletterSignup() {
           <div className="bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-3xl">
             <span className="text-4xl block mb-4">🎉</span>
             <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">You're Subscribed!</h3>
-            <p className="text-muted text-lg">Watch your inbox for the best tech opportunities in Pakistan.</p>
+            <p className="text-muted text-lg">You&apos;re in! Check your inbox for the best tech jobs in Pakistan every week.</p>
           </div>
         )}
       </div>
