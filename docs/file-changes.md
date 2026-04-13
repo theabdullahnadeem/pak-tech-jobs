@@ -17,6 +17,24 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/api/stats/route.ts` — Saved (no code changes) — April 13, 2026
+
+**Summary**
+
+The file `src/app/api/stats/route.ts` was saved with no code changes. It is a Next.js API route that serves platform-wide statistics (such as total job listings, registered users, or other aggregate counts) to be consumed by the frontend.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+File was saved by the editor (auto-save, format-on-save, or manual Ctrl+S) with no actual edits. Content is identical to its prior state.
+
+---
+
 #### `prisma/schema.prisma` — Modified — April 13, 2026
 
 **Summary**

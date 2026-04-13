@@ -24,10 +24,34 @@ export default function HomePage() {
     skills: string[]; recruiter: { name: string; companyName: string | null };
   }[]>([]);
 
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+
   useEffect(() => {
     fetch("/api/jobs?limit=6")
       .then(r => r.json())
       .then(data => { if (Array.isArray(data)) setTrendingJobs(data.slice(0, 6)); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    // Fetch all active jobs once to compute category counts
+    fetch("/api/jobs")
+      .then(r => r.json())
+      .then((jobs: { jobType: string; city: string; category: string[]; experienceLevel: string }[]) => {
+        if (!Array.isArray(jobs)) return;
+        setCategoryCounts({
+          frontend: jobs.filter(j => j.category?.some(c => /frontend|react|vue|angular/i.test(c)) || j.category?.some(c => /react/i.test(c))).length,
+          backend: jobs.filter(j => j.category?.some(c => /backend|node|python|php/i.test(c))).length,
+          mern: jobs.filter(j => j.category?.some(c => /mern|full.?stack/i.test(c))).length,
+          ai: jobs.filter(j => j.category?.some(c => /ai|ml|machine.?learning|python/i.test(c))).length,
+          mobile: jobs.filter(j => j.category?.some(c => /mobile|react.?native|flutter/i.test(c))).length,
+          devops: jobs.filter(j => j.category?.some(c => /devops|cloud|aws|docker/i.test(c))).length,
+          security: jobs.filter(j => j.category?.some(c => /security|cyber/i.test(c))).length,
+          design: jobs.filter(j => j.category?.some(c => /design|ui|ux/i.test(c))).length,
+          internship: jobs.filter(j => j.jobType === "INTERNSHIP" || j.experienceLevel === "JUNIOR").length,
+          remote: jobs.filter(j => j.jobType === "REMOTE").length,
+        });
+      })
       .catch(() => {});
   }, []);
 
@@ -199,35 +223,41 @@ export default function HomePage() {
             </h2>
           </div>
           <div className="categories-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {/* Hardcoded visual category cards to match the requirements */}
             {[
-              { label: "Frontend Development", icon: "🖥️", count: 24, href: "/frontend-jobs" },
-              { label: "Backend Development", icon: "⚙️", count: 18, href: "/backend-jobs" },
-              { label: "Full Stack / MERN", icon: "🔗", count: 32, href: "/mern-jobs-pakistan" },
-              { label: "AI & Machine Learning", icon: "🤖", count: 12, href: "/ai-jobs-pakistan" },
-              { label: "Mobile Development", icon: "📱", count: 15, href: "/jobs" }, // Fallback to /jobs
-              { label: "DevOps & Cloud", icon: "☁️", count: 9, href: "/devops-jobs-pakistan" },
-              { label: "Cybersecurity", icon: "🔐", count: 4, href: "/jobs" },
-              { label: "UI/UX Design", icon: "🎨", count: 11, href: "/jobs" },
-              { label: "Internships", icon: "🎓", count: 28, href: "/internships-pakistan" },
-              { label: "Remote Only", icon: "🌍", count: 45, href: "/remote-jobs" },
-            ].map((cat) => (
-              <Link 
-                key={cat.label} 
-                href={cat.href}
-                className="category-card group flex flex-col p-6 rounded-2xl border border-border dark:border-border-dark bg-card hover:bg-surface dark:bg-card-dark dark:hover:bg-surface-dark transition-all hover:border-primary/50 hover:shadow-xl hover:-translate-y-1"
-              >
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">
-                  {cat.icon}
-                </div>
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors leading-tight mb-2">
-                  {cat.label}
-                </h3>
-                <span className="text-xs font-semibold text-muted bg-foreground/5 dark:bg-foreground/10 self-start px-2 py-1 rounded">
-                  {cat.count} Jobs
-                </span>
-              </Link>
-            ))}
+              { label: "Frontend Development", icon: "🖥️", countKey: "frontend", href: "/frontend-jobs" },
+              { label: "Backend Development",  icon: "⚙️", countKey: "backend",  href: "/backend-jobs" },
+              { label: "Full Stack / MERN",    icon: "🔗", countKey: "mern",     href: "/mern-jobs-pakistan" },
+              { label: "AI & Machine Learning",icon: "🤖", countKey: "ai",       href: "/ai-jobs-pakistan" },
+              { label: "Mobile Development",   icon: "📱", countKey: "mobile",   href: "/jobs" },
+              { label: "DevOps & Cloud",       icon: "☁️", countKey: "devops",   href: "/devops-jobs-pakistan" },
+              { label: "Cybersecurity",        icon: "🔐", countKey: "security", href: "/jobs" },
+              { label: "UI/UX Design",         icon: "🎨", countKey: "design",   href: "/jobs" },
+              { label: "Internships",          icon: "🎓", countKey: "internship",href: "/internships-pakistan" },
+              { label: "Remote Only",          icon: "🌍", countKey: "remote",   href: "/remote-jobs" },
+            ].map((cat) => {
+              const count = categoryCounts[cat.countKey] ?? null;
+              return (
+                <Link
+                  key={cat.label}
+                  href={cat.href}
+                  className="category-card group flex flex-col p-6 rounded-2xl border border-border dark:border-border-dark bg-card hover:bg-surface dark:bg-card-dark dark:hover:bg-surface-dark transition-all hover:border-primary/50 hover:shadow-xl hover:-translate-y-1"
+                >
+                  <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">
+                    {cat.icon}
+                  </div>
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors leading-tight mb-2">
+                    {cat.label}
+                  </h3>
+                  <span className="text-xs font-semibold text-muted bg-foreground/5 dark:bg-foreground/10 self-start px-2 py-1 rounded">
+                    {count === null ? (
+                      <span className="inline-block w-8 h-3 rounded bg-foreground/10 animate-pulse" />
+                    ) : (
+                      `${count} Job${count !== 1 ? "s" : ""}`
+                    )}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
