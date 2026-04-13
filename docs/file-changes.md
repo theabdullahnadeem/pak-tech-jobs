@@ -17,6 +17,48 @@ A chronological log of notable file additions, modifications, and deletions in t
 
 ---
 
+#### `src/app/layout.tsx` — Saved (no code changes) — April 14, 2026
+
+**Summary**
+
+The file `src/app/layout.tsx` was saved with no code changes. It defines the root `RootLayout` component for the PakTechJobs Next.js application. Its current structure includes font loading (`Geist`, `Geist_Mono`), full SEO metadata with Open Graph and Twitter card config, two JSON-LD structured data blocks (`Organization` and `WebSite` with `SearchAction`), a dark-mode injection IIFE script, PWA manifest and meta tags, and a `<body>` wrapping children in `<Providers>`, `<Navbar />`, `<main>`, `<Footer />`, and `<PWAInstaller />`.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+File was saved by the editor (auto-save, format-on-save, or manual Ctrl+S) with no actual edits. Content is identical to its prior state.
+
+---
+
+#### `src/app/layout.tsx` — Saved (no code changes) — April 14, 2026
+
+**Summary**
+
+The file `src/app/layout.tsx` was saved with no code changes. It defines the root `RootLayout` component for the PakTechJobs Next.js application. Its current structure:
+
+- **Fonts**: Loads `Geist` and `Geist_Mono` from `next/font/google`, exposed as CSS variables `--font-geist-sans` and `--font-geist-mono`.
+- **Metadata**: Exports a `Metadata` object with `metadataBase` set to `https://www.paktechjobs.com`, a default title and `%s | PakTechJobs` template, a long-form `description`, 26 SEO `keywords` targeting Pakistani tech salary and job search queries, canonical `/` alternate, and full `openGraph` and `twitter` card configurations (both using `/og-image.png`).
+- **Structured data**: Inlines two JSON-LD `<script>` blocks — an `Organization` schema (name, url, logo, email, description, areaServed, sameAs) and a `WebSite` schema with a `SearchAction` pointing to `/salaries?q={search_term_string}`.
+- **`<head>`**: Includes an inline IIFE script for dark-mode class injection (reads `localStorage.theme`, falls back to `prefers-color-scheme`), PWA manifest link, `theme-color` meta, Apple mobile web app meta tags, and `apple-touch-icon`.
+- **`<body>`**: Wraps children in `<Providers>`, renders `<Navbar />`, a `<main className="min-h-screen pt-16">` containing `{children}`, `<Footer />`, and `<PWAInstaller />`.
+
+**Change**
+
+```diff
+(no diff — file saved with no code changes)
+```
+
+**Reasoning**
+
+File was saved by the editor (auto-save, format-on-save, or manual Ctrl+S) with no actual edits. Content is identical to its prior state.
+
+---
+
 #### `src/components/ResumeReviewCTA.tsx` — Saved (no code changes) — April 14, 2026
 
 **Summary**
