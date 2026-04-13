@@ -63,5 +63,5 @@ PakTechJobs is Pakistan's leading technology job board connecting Pakistani soft
 
 ## Contact
 - Website: https://www.paktechjobs.com
-- Email: paktechjobs@gmail.com
+- Email: paktechhjobs@gmail.com
 - Twitter: @PakTechJobs

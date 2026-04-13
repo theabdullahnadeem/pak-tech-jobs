@@ -8,6 +8,7 @@ export default function NewsletterSignup() {
   const [jobType, setJobType] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const skills = ["React", "Node.js", "Python / AI", "Full Stack", "DevOps", "Cybersecurity", "Other"];
   const jobTypes = ["Remote", "On-site", "Both"];
@@ -15,20 +16,26 @@ export default function NewsletterSignup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
+
     try {
-      // Create a job alert for the subscriber
-      await fetch("/api/job-alerts", {
+      const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keywords: [skill || "Tech"],
-          jobType: jobType === "Remote" ? "REMOTE" : undefined,
-        }),
-      }).catch(() => {}); // non-fatal if not logged in
+        body: JSON.stringify({ email, skill, jobType }),
+      });
+
+      if (res.ok) {
+        setSubmitted(true);
+        setEmail("");
+      } else {
+        const data = await res.json();
+        setError(data.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
-      setSubmitted(true);
-      setEmail("");
     }
   };
 
@@ -36,10 +43,10 @@ export default function NewsletterSignup() {
     <section className="py-24 bg-surface dark:bg-surface-dark border-t border-border dark:border-border-dark">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-          Get Pakistan's Best Tech Jobs in Your Inbox — <span className="text-primary italic">Every Week</span>
+          Get Pakistan&apos;s Best Tech Jobs in Your Inbox — <span className="text-primary italic">Every Week</span>
         </h2>
         <p className="text-lg text-muted mb-10">
-          Subscribe to "Tech Jobs Pakistan Weekly" and receive curated, high-paying opportunities matching your exact skills.
+          Subscribe to &quot;Tech Jobs Pakistan Weekly&quot; and receive curated, high-paying opportunities matching your exact skills.
         </p>
 
         {!submitted ? (
@@ -72,19 +79,21 @@ export default function NewsletterSignup() {
                 {jobTypes.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               type="submit"
               disabled={loading}
               className="w-full py-4 mt-2 bg-foreground text-background font-bold text-lg rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-               {loading ? "Subscribing..." : "Subscribe Free"}
+              {loading ? "Subscribing..." : "Subscribe Free"}
             </button>
+            <p className="text-xs text-muted">No spam. Unsubscribe anytime.</p>
           </form>
         ) : (
           <div className="bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-3xl">
             <span className="text-4xl block mb-4">🎉</span>
-            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">You're Subscribed!</h3>
-            <p className="text-muted text-lg">You&apos;re in! Check your inbox for the best tech jobs in Pakistan every week.</p>
+            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">You&apos;re Subscribed!</h3>
+            <p className="text-muted text-lg">You&apos;re in! Check your inbox — we&apos;ve sent you a welcome email with the best current jobs.</p>
           </div>
         )}
       </div>

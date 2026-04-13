@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 const contactCards = [
-  { icon: "📧", title: "Email", content: "paktechjobs@gmail.com", href: "mailto:paktechjobs@gmail.com", linkLabel: "Send email" },
+  { icon: "📧", title: "Email", content: "paktechhjobs@gmail.com", href: "mailto:paktechhjobs@gmail.com", linkLabel: "Send email" },
   { icon: "💬", title: "WhatsApp", content: "Chat directly with us", href: "https://wa.me/923161404891", linkLabel: "Open WhatsApp" },
   { icon: "📍", title: "Location", content: "Pakistan", href: null, linkLabel: null },
   { icon: "⏰", title: "Response Time", content: "Within 24–48 hours", href: null, linkLabel: null },

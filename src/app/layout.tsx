@@ -92,7 +92,7 @@ export default function RootLayout({
     "name": "PakTechJobs",
     "url": "https://www.paktechjobs.com",
     "logo": "https://www.paktechjobs.com/og-image.png",
-    "email": "paktechjobs@gmail.com",
+    "email": "paktechhjobs@gmail.com",
     "description": "Pakistan's resource for tech salary data, career tools, and professional development.",
     "areaServed": "PK",
     "sameAs": [

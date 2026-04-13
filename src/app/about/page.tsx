@@ -191,9 +191,9 @@ export default function AboutPage() {
               className="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-all text-center hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25">
               Contact Us
             </Link>
-            <a href="mailto:paktechjobs@gmail.com"
+            <a href="mailto:paktechhjobs@gmail.com"
               className="px-6 py-3 border border-border dark:border-border-dark hover:border-primary/50 font-medium rounded-xl transition-all text-center hover:-translate-y-0.5">
-              paktechjobs@gmail.com
+              paktechhjobs@gmail.com
             </a>
           </div>
         </section>

@@ -14,6 +14,95 @@ import { resources } from "@/data/resources";
 
 gsap.registerPlugin(ScrollTrigger);
 
+function SalarySubmitSection() {
+  const [form, setForm] = useState({ role: "", city: "", level: "", salary: "", stack: "", email: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true); setErr("");
+    try {
+      const res = await fetch("/api/salary-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) setDone(true);
+      else { const d = await res.json(); setErr(d.error || "Failed. Try again."); }
+    } catch { setErr("Network error. Try again."); }
+    finally { setSubmitting(false); }
+  };
+
+  const inputCls = "w-full px-4 py-2.5 rounded-xl border border-border dark:border-border-dark bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm";
+
+  return (
+    <section className="py-14 bg-background border-t border-border dark:border-border-dark">
+      <div className="cta-section-inner max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3">Know Your Salary? Help the Community.</h2>
+          <p className="text-muted text-lg max-w-xl mx-auto">
+            Your anonymous submission helps thousands of Pakistani developers make better career decisions. Takes 2 minutes.
+          </p>
+        </div>
+        {done ? (
+          <div className="text-center p-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+            <span className="text-5xl block mb-3">🙏</span>
+            <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">Thank you!</h3>
+            <p className="text-muted">Your salary data helps the Pakistani dev community. We&apos;ll review and add it to our guides.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="bg-card dark:bg-card-dark border border-border dark:border-border-dark rounded-2xl p-6 sm:p-8 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Job Title / Role *</label>
+                <input name="role" required value={form.role} onChange={handleChange} placeholder="e.g. React Developer" className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">City *</label>
+                <select name="city" required value={form.city} onChange={handleChange} className={inputCls}>
+                  <option value="">Select city</option>
+                  {["Lahore","Karachi","Islamabad","Rawalpindi","Remote","Other"].map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Experience Level *</label>
+                <select name="level" required value={form.level} onChange={handleChange} className={inputCls}>
+                  <option value="">Select level</option>
+                  {["Junior (0-2 yrs)","Mid (2-5 yrs)","Senior (5+ yrs)","Lead / Manager"].map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Monthly Salary (PKR) *</label>
+                <input name="salary" required type="number" min="10000" value={form.salary} onChange={handleChange} placeholder="e.g. 150000" className={inputCls} />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-muted mb-1">Tech Stack / Skills</label>
+                <input name="stack" value={form.stack} onChange={handleChange} placeholder="e.g. React, Node.js, PostgreSQL" className={inputCls} />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-muted mb-1">Your Email (optional — for follow-up)</label>
+                <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="your@email.com" className={inputCls} />
+              </div>
+            </div>
+            {err && <p className="text-red-500 text-sm">{err}</p>}
+            <button type="submit" disabled={submitting}
+              className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all hover:-translate-y-0.5 shadow-lg shadow-primary/20 disabled:opacity-50">
+              {submitting ? "Submitting…" : "Submit My Salary →"}
+            </button>
+            <p className="text-xs text-muted text-center">100% anonymous. We never share individual data.</p>
+          </form>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
@@ -363,20 +452,7 @@ export default function HomePage() {
       </section>
 
       {/* B5: Submit Your Salary CTA */}
-      <section className="py-14 bg-background border-t border-border dark:border-border-dark">
-        <div className="cta-section-inner max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3">Know Your Salary? Help the Community.</h2>
-          <p className="text-muted mb-6 text-lg max-w-xl mx-auto">
-            Your anonymous submission helps thousands of Pakistani developers make better career decisions. Takes 2 minutes.
-          </p>
-          <Link
-            href="/contact?subject=Salary+Data+Submission"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white font-bold rounded-xl transition-all hover:bg-primary-dark shadow-lg shadow-primary/20 hover:-translate-y-1"
-          >
-            Submit My Salary →
-          </Link>
-        </div>
-      </section>
+      <SalarySubmitSection />
 
       {/* ═══════════ NEWSLETTER SIGNUP ═══════════ */}
       <NewsletterSignup />
