@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
   try {
     const jobs = await prisma.jobPost.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ isPremium: "desc" }, { createdAt: "desc" }],
       select: {
         id: true,
         title: true,
@@ -113,6 +113,7 @@ export async function GET(req: NextRequest) {
         category: true,
         createdAt: true,
         applyUrl: true,
+        isPremium: true,
         recruiter: {
           select: {
             id: true,

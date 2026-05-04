@@ -12,6 +12,12 @@ datasource db {
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
+enum EmployerTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
 enum Role {
   APPLICANT
   RECRUITER
@@ -129,6 +135,13 @@ model User {
   // Theme preference
   themePreference      String?   @default("system")
 
+  // Enterprise tier fields
+  tier                 EmployerTier @default(FREE)
+  maxRecruiterSeats    Int          @default(1)
+  subscriptionExpiry   DateTime?
+  accountManagerName   String?
+  hasCvAccess          Boolean      @default(false)
+
   jobPosts                  JobPost[]
   applications              Application[]
   notifications             Notification[]
@@ -174,6 +187,7 @@ model JobPost {
   isFeatured           Boolean   @default(false)
   featuredUntil        DateTime?
   applyUrl             String?
+  isPremium            Boolean   @default(false)
 
   applications Application[]
   savedByUsers SavedJob[]

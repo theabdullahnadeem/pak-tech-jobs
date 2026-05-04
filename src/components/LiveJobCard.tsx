@@ -14,6 +14,7 @@ export interface LiveJob {
   skills: string[];
   createdAt: string;
   applyUrl?: string | null;
+  isPremium?: boolean;
   recruiter: {
     id: string;
     name: string;
@@ -61,12 +62,19 @@ export default function LiveJobCard({ job }: { job: LiveJob }) {
 
   return (
     <div className="group relative flex flex-col p-6 rounded-2xl border border-border dark:border-border-dark bg-card dark:bg-card-dark transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
-      {/* Aggregated badge */}
-      {isAggregated && (
-        <span className="absolute top-4 right-4 text-[10px] font-medium text-muted bg-surface dark:bg-surface-dark px-2 py-0.5 rounded-full border border-border dark:border-border-dark">
-          External
-        </span>
-      )}
+      {/* Top-right badges: Premium and/or External */}
+      <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+        {job.isPremium && (
+          <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+            ⭐ Premium
+          </span>
+        )}
+        {isAggregated && (
+          <span className="text-[10px] font-medium text-muted bg-surface dark:bg-surface-dark px-2 py-0.5 rounded-full border border-border dark:border-border-dark">
+            External
+          </span>
+        )}
+      </div>
 
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">

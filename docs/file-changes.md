@@ -7,11 +7,46 @@ A chronological log of notable file additions, modifications, and deletions in t
 ## Table of Contents
 
 - [2026](#2026)
+  - [May](#may-2026)
   - [April](#april-2026)
 
 ---
 
 ## 2026
+
+### May 2026
+
+---
+
+#### `prisma/schema.prisma` — Modified — May 4, 2026
+
+**Summary**
+
+Added a new `EmployerTier` enum with three values (`FREE`, `PRO`, `ENTERPRISE`) to the Prisma schema. No model fields were changed in this diff; the enum definition was inserted above the existing `Role` enum.
+
+**Change**
+
+```diff
++enum EmployerTier {
++  FREE
++  PRO
++  ENTERPRISE
++}
++
+ enum Role {
+   APPLICANT
+   RECRUITER
+```
+
+**Reasoning**
+
+The `EmployerTier` enum is the foundational type required by the Enterprise Tier feature. It must be declared in the schema before it can be referenced as a field type on the `User` model (for the `tier` field). Defining the enum as a separate step keeps the migration atomic and reviewable before the model field additions follow.
+
+**Approach**
+
+Defined as a Prisma enum rather than a plain `String` field with application-level validation. Using a database-level enum constrains the column to only the three valid values at the storage layer, preventing invalid tier values from being persisted regardless of application code paths.
+
+---
 
 ### April 2026
 

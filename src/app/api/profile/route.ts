@@ -36,6 +36,9 @@ export async function GET() {
       recruiterVerified: true,
       responseRate: true,
       avgResponseTimeHours: true,
+      // Enterprise tier fields
+      tier: true,
+      accountManagerName: true,
     },
   });
 

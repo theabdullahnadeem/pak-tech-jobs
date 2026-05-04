@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ApplicationDetailPanel from "@/components/ApplicationDetailPanel";
+import DedicatedSupportWidget from "@/components/DedicatedSupportWidget";
+import type { EmployerTier } from "@/lib/enterpriseTier";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -345,6 +347,10 @@ export default function RecruiterDashboardPage() {
   // Search/filter
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Enterprise tier profile
+  const [userTier, setUserTier] = useState<EmployerTier>("FREE");
+  const [accountManagerName, setAccountManagerName] = useState<string | null>(null);
+
   // Error toast
   const [toastError, setToastError] = useState<string | null>(null);
 
@@ -388,6 +394,20 @@ export default function RecruiterDashboardPage() {
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
+
+  // ── Fetch profile (tier + account manager) ──────────────────────────────────
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data) {
+          setUserTier(data.tier ?? "FREE");
+          setAccountManagerName(data.accountManagerName ?? null);
+        }
+      })
+      .catch(() => {/* non-critical — widget simply won't show */});
+  }, []);
 
   // ── Group by stage ──────────────────────────────────────────────────────────
 
@@ -588,6 +608,9 @@ export default function RecruiterDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 px-4 sm:px-6 py-6 sm:py-8">
+      {/* Dedicated Support Widget (Enterprise only) */}
+      <DedicatedSupportWidget tier={userTier} accountManagerName={accountManagerName} />
+
       {/* Header */}
       <div className="mb-6">
         {/* Top row: title + primary action */}

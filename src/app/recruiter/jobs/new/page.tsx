@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
+import { useState, useEffect, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
+import PremiumListingToggle from "@/components/PremiumListingToggle";
+import type { EmployerTier } from "@/lib/enterpriseTier";
 
 type ExperienceLevel = "JUNIOR" | "MID" | "SENIOR" | "LEAD";
 type JobType = "FULL_TIME" | "REMOTE" | "CONTRACT" | "INTERNSHIP" | "PART_TIME";
@@ -56,6 +58,24 @@ export default function NewJobPage() {
   const [requiredFields, setRequiredFields] = useState<string[]>(["name", "email"]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Premium listing state
+  const [isPremium, setIsPremium] = useState(false);
+  const [userTier, setUserTier] = useState<EmployerTier>("FREE");
+
+  // Fetch the current user's tier from the profile API
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.tier) {
+          setUserTier(data.tier as EmployerTier);
+        }
+      })
+      .catch(() => {
+        // Default to FREE on error — toggle will be disabled
+      });
+  }, []);
 
   // ── Tag input helpers ────────────────────────────────────────────────────────
 
@@ -167,6 +187,7 @@ export default function NewJobPage() {
           jobType,
           category: finalCategories,
           requiredFields,
+          isPremium,
         }),
       });
 
@@ -358,6 +379,15 @@ export default function NewJobPage() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Premium Listing toggle */}
+          <div className="rounded-lg border border-gray-300 bg-white p-3">
+            <PremiumListingToggle
+              tier={userTier}
+              value={isPremium}
+              onChange={setIsPremium}
+            />
           </div>
 
           {/* Actions */}

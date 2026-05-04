@@ -45,7 +45,17 @@ interface AdminJob {
   _count: { applications: number };
 }
 
-type Tab = "pending" | "recruiters" | "seekers" | "jobs";
+interface EnterpriseEmployer {
+  id: string;
+  name: string;
+  companyName: string | null;
+  subscriptionExpiry: string | null;
+  maxRecruiterSeats: number;
+  accountManagerName: string | null;
+  hasCvAccess: boolean;
+}
+
+type Tab = "pending" | "recruiters" | "seekers" | "jobs" | "enterprise";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -400,6 +410,185 @@ function JobsTab({ jobs }: { jobs: AdminJob[] }) {
   );
 }
 
+// ─── Enterprise Tab ───────────────────────────────────────────────────────────
+
+function EnterpriseTab() {
+  const [employers, setEmployers] = useState<EnterpriseEmployer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Activation form state
+  const [employerId, setEmployerId] = useState("");
+  const [durationMonths, setDurationMonths] = useState("");
+  const [seats, setSeats] = useState("");
+  const [accountManagerName, setAccountManagerName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/enterprise/employers")
+      .then(r => r.json())
+      .then(setEmployers)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleActivate(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setSuccessMsg("");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/admin/enterprise/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employerId: employerId.trim(),
+          durationMonths: Number(durationMonths),
+          seats: Number(seats),
+          accountManagerName: accountManagerName.trim() || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorMsg(data.error ?? "Activation failed");
+      } else {
+        setSuccessMsg(`Enterprise activated for employer ${data.id}`);
+        // Refresh the employer list
+        fetch("/api/admin/enterprise/employers")
+          .then(r => r.json())
+          .then(setEmployers)
+          .catch(() => {});
+        // Reset form
+        setEmployerId("");
+        setDurationMonths("");
+        setSeats("");
+        setAccountManagerName("");
+      }
+    } catch {
+      setErrorMsg("Network error");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Enterprise Employers Table */}
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-4">Enterprise Employers</h2>
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-gray-700">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-800 text-gray-400 text-xs uppercase tracking-wider">
+                <tr>
+                  <th className="px-4 py-3 text-left">Name</th>
+                  <th className="px-4 py-3 text-left">Company</th>
+                  <th className="px-4 py-3 text-left">Expiry</th>
+                  <th className="px-4 py-3 text-left">Seats</th>
+                  <th className="px-4 py-3 text-left">Account Manager</th>
+                  <th className="px-4 py-3 text-left">CV Access</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {employers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
+                      No enterprise employers yet
+                    </td>
+                  </tr>
+                ) : employers.map(emp => (
+                  <tr key={emp.id} className="hover:bg-gray-800/50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-white">{emp.name}</td>
+                    <td className="px-4 py-3 text-gray-400">{emp.companyName ?? "—"}</td>
+                    <td className="px-4 py-3 text-gray-400">
+                      {emp.subscriptionExpiry
+                        ? new Date(emp.subscriptionExpiry).toLocaleDateString("en-PK", { year: "numeric", month: "short", day: "numeric" })
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">{emp.maxRecruiterSeats}</td>
+                    <td className="px-4 py-3 text-gray-400">{emp.accountManagerName ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {emp.hasCvAccess
+                        ? <span className="text-xs bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full">Yes</span>
+                        : <span className="text-xs bg-gray-500/10 text-gray-400 px-2 py-0.5 rounded-full">No</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Activation Form */}
+      <div className="rounded-xl border border-gray-700 bg-gray-900 p-6">
+        <h2 className="text-lg font-semibold text-white mb-4">Activate Enterprise Package</h2>
+        <form onSubmit={handleActivate} className="space-y-4 max-w-md">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Employer ID</label>
+            <input
+              required
+              value={employerId}
+              onChange={e => setEmployerId(e.target.value)}
+              placeholder="cuid..."
+              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Duration (months, 1–60)</label>
+            <input
+              required
+              type="number"
+              min={1}
+              max={60}
+              value={durationMonths}
+              onChange={e => setDurationMonths(e.target.value)}
+              placeholder="12"
+              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Recruiter Seats (1–50)</label>
+            <input
+              required
+              type="number"
+              min={1}
+              max={50}
+              value={seats}
+              onChange={e => setSeats(e.target.value)}
+              placeholder="5"
+              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Account Manager Name (optional)</label>
+            <input
+              value={accountManagerName}
+              onChange={e => setAccountManagerName(e.target.value)}
+              placeholder="e.g. Ali Hassan"
+              className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {submitting ? "Activating…" : "Activate Enterprise"}
+          </button>
+          {successMsg && <p className="text-sm text-emerald-400">{successMsg}</p>}
+          {errorMsg && <p className="text-sm text-red-400">{errorMsg}</p>}
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
@@ -432,6 +621,7 @@ export default function AdminPage() {
     { key: "recruiters", label: "Recruiters", badge: usersLoading ? undefined : users.filter(u => u.role === "RECRUITER").length },
     { key: "seekers", label: "Job Seekers", badge: usersLoading ? undefined : users.filter(u => u.role === "APPLICANT").length },
     { key: "jobs", label: "Job Posts", badge: jobsLoading ? undefined : jobs.length },
+    { key: "enterprise", label: "Enterprise" },
   ];
 
   const isLoading = (activeTab === "pending" && pendingLoading) ||
@@ -475,6 +665,7 @@ export default function AdminPage() {
             {activeTab === "recruiters" && <RecruitersTab users={users} setUsers={setUsers} />}
             {activeTab === "seekers" && <SeekersTab users={users} />}
             {activeTab === "jobs" && <JobsTab jobs={jobs} />}
+            {activeTab === "enterprise" && <EnterpriseTab />}
           </>
         )}
       </div>
