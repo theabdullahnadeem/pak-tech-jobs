@@ -166,6 +166,7 @@ export async function POST(req: NextRequest) {
     jobType,
     category,
     requiredFields,
+    isPremium,
   } = body as Record<string, unknown>;
 
   // Required field validation (Requirement 2.1, 2.2)
@@ -211,6 +212,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Fetch the recruiter's tier to enforce isPremium access control
+    const recruiter = await prisma.user.findUnique({
+      where: { id: session!.user.id },
+      select: { tier: true },
+    });
+    const canPremium = recruiter?.tier === "PRO" || recruiter?.tier === "ENTERPRISE";
+
     const job = await prisma.jobPost.create({
       data: {
         recruiterId: session!.user.id,
@@ -225,6 +233,7 @@ export async function POST(req: NextRequest) {
         jobType: jobType as JobType,
         category: category as string[],
         requiredFields: Array.isArray(requiredFields) ? requiredFields as string[] : ["name", "email"],
+        isPremium: canPremium && isPremium === true,
       },
     });
 
