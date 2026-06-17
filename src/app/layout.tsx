@@ -130,6 +130,12 @@ export default function RootLayout({
             gtag('config', 'G-XKS083QWTM');
           `}
         </Script>
+        <Script
+          src="https://quge5.com/88/tag.min.js"
+          data-zone="250846"
+          data-cfasync="false"
+          strategy="afterInteractive"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&d)||(t==='system'&&d)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
